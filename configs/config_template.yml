@@ -1,0 +1,186 @@
+port: 7891
+socks-port: 7892
+allow-lan: true
+mode: rule
+log-level: info
+
+# Transparent proxy server port for Linux and macOS (Redirect TCP and TProxy UDP)
+redir-port: 7893
+
+# Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
+tproxy-port: 7894
+
+# HTTP(S) and SOCKS4(A)/SOCKS5 server on the same port
+mixed-port: 7890
+
+bind-address: "0.0.0.0"
+proxies:
+
+  - {name: USA, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+  - {name: HK,  server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+  - {name: JPN, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+
+proxy-groups:
+  - name: 🚀 自动加速
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - 香港节点
+      - 日本节点
+      - 美国节点
+  - name: 🚀 手动加速
+    type: select
+    proxies:
+      - HK
+      - USA
+      - JPN
+  - name: ♻️ 自动选择
+    type: url-test
+    # type: select
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - HK
+      - USA
+      - JPN
+      - DIRECT
+  - name: 🛑 广告拦截
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+  - name: 香港节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - HK
+  - name: 日本节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - JPN
+  - name: 美国节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 150
+    proxies:
+      - USA
+
+# clash 的 DNS 配置文件，支持自定义 DNS 服务器，可以根据自己的需求添加 DNS 服务器
+# 详细文档请参考：https://lancellc.gitbook.io/clash/clash-config-file/dns
+dns:
+  enable: false
+  listen: 0.0.0.0:53
+  # ipv6: false # when the false, response to AAAA questions will be empty
+
+  # These nameservers are used to resolve the DNS nameserver hostnames below.
+  # Specify IP addresses only
+  default-nameserver:
+    - 114.114.114.114
+    - 8.8.8.8
+  # enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16 # Fake IP addresses pool CIDR
+  # use-hosts: true # lookup hosts and return IP record
+
+  # search-domains: [local] # search domains for A/AAAA record
+
+  # Hostnames in this list will not be resolved with fake IPs
+  # i.e. questions to these domain names will always be answered with their
+  # real IP addresses
+  # fake-ip-filter:
+  #   - "*.lan"
+  #   - localhost.ptlogin2.qq.com
+
+  # Supports UDP, TCP, DoT, DoH. You can specify the port to connect to.
+  # All DNS questions are sent directly to the nameserver, without proxies
+  # involved. Clash answers the DNS question with the first result gathered.
+  nameserver:
+    - 114.114.114.114 # default value
+    - 8.8.8.8 # default value
+    - tls://dns.rubyfish.cn:853 # DNS over TLS
+    - https://1.1.1.1/dns-query # DNS over HTTPS
+    # - dhcp://en0 # dns from dhcp
+    # - "8.8.8.8#en0"
+
+  # When `fallback` is present, the DNS server will send concurrent requests
+  # to the servers in this section along with servers in `nameservers`.
+  # The answers from fallback servers are used when the GEOIP country
+  # is not `CN`.
+  # fallback:
+  #   - tcp://1.1.1.1
+  #   - "tcp://1.1.1.1#en0"
+
+  # If IP addresses resolved with servers in `nameservers` are in the specified
+  # subnets below, they are considered invalid and results from `fallback`
+  # servers are used instead.
+  #
+  # IP address resolved with servers in `nameserver` is used when
+  # `fallback-filter.geoip` is true and when GEOIP of the IP address is `CN`.
+  #
+  # If `fallback-filter.geoip` is false, results from `nameserver` nameservers
+  # are always used if not match `fallback-filter.ipcidr`.
+  #
+  # This is a countermeasure against DNS pollution attacks.
+  # fallback-filter:
+  #   geoip: true
+  #   geoip-code: CN
+  #   ipcidr:
+  #     - 240.0.0.0/4
+  #   domain:
+  #     - "+.google.com"
+  #     - "+.facebook.com"
+  #     - "+.youtube.com"
+
+  # Lookup domains via specific nameservers
+  # nameserver-policy:
+  #   "www.baidu.com": "114.114.114.114"
+  #   "+.internal.crop.com": "10.0.0.1"
+
+
+
+# clash 的规则文件，支持自定义规则，可以根据自己的需求添加规则
+# 详细文档请参考：https://lancellc.gitbook.io/clash/clash-config-file/rule-providers
+rules:
+  # 这几个代理地址直接走直连
+  - DOMAIN-SUFFIX,github.com,🚀 自动加速
+  - DOMAIN-SUFFIX,google.com.hk,🚀 自动加速
+  - DOMAIN-SUFFIX,telegram.org,🚀 自动加速
+  - DOMAIN-SUFFIX,telesco.pe,🚀 自动加速
+  - IP-CIDR,91.108.0.0/16,🚀 自动加速,no-resolve
+  - IP-CIDR,109.239.140.0/24,🚀 自动加速,no-resolve
+  - IP-CIDR,149.154.160.0/20,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,🚀 自动加速,no-resolve
+  - DOMAIN-SUFFIX,edgedatg.com,🚀 自动加速
+  - DOMAIN-SUFFIX,go.com,🚀 自动加速
+  - DOMAIN-KEYWORD,uk-live,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.co,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.com,🚀 自动加速
+  - DOMAIN-SUFFIX,apache.org,🚀 自动加速
+  - DOMAIN-SUFFIX,docker.com,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.co,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.com,🚀 自动加速
+  - DOMAIN-KEYWORD,sci-hub,🚀 自动加速
+  - DOMAIN-KEYWORD,spotify,🚀 自动加速
+  - DOMAIN-KEYWORD,telegram,🚀 自动加速
+  - DOMAIN-KEYWORD,twitter,🚀 自动加速
+  - DOMAIN-KEYWORD,whatsapp,🚀 自动加速
+  - DOMAIN-KEYWORD,youtube,🚀 自动加速
+  - DOMAIN-KEYWORD,google,🚀 自动加速
+  - DOMAIN-KEYWORD,gfwlist,🚀 自动加速
+  - GEOIP,CN,DIRECT
+  - DOMAIN-SUFFIX,acl4.ssr,DIRECT
+  - DOMAIN-SUFFIX,ip6-localhost,DIRECT
+  - DOMAIN-SUFFIX,ip6-loopback,DIRECT
+  - DOMAIN-SUFFIX,lan,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,localhost,DIRECT

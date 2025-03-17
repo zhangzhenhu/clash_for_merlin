@@ -1,0 +1,37 @@
+# clash 的规则文件，支持自定义规则，可以根据自己的需求添加规则
+# 详细文档请参考：https://lancellc.gitbook.io/clash/clash-config-file/rule-providers
+rules:
+  # 这几个代理地址直接走直连
+  - DOMAIN-SUFFIX,github.com,🚀 自动加速
+  - DOMAIN-SUFFIX,google.com.hk,🚀 自动加速
+  - DOMAIN-SUFFIX,telegram.org,🚀 自动加速
+  - DOMAIN-SUFFIX,telesco.pe,🚀 自动加速
+  - IP-CIDR,91.108.0.0/16,🚀 自动加速,no-resolve
+  - IP-CIDR,109.239.140.0/24,🚀 自动加速,no-resolve
+  - IP-CIDR,149.154.160.0/20,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,🚀 自动加速,no-resolve
+  - DOMAIN-SUFFIX,edgedatg.com,🚀 自动加速
+  - DOMAIN-SUFFIX,go.com,🚀 自动加速
+  - DOMAIN-KEYWORD,uk-live,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.co,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.com,🚀 自动加速
+  - DOMAIN-SUFFIX,apache.org,🚀 自动加速
+  - DOMAIN-SUFFIX,docker.com,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.co,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.com,🚀 自动加速
+  - DOMAIN-KEYWORD,sci-hub,🚀 自动加速
+  - DOMAIN-KEYWORD,spotify,🚀 自动加速
+  - DOMAIN-KEYWORD,telegram,🚀 自动加速
+  - DOMAIN-KEYWORD,twitter,🚀 自动加速
+  - DOMAIN-KEYWORD,whatsapp,🚀 自动加速
+  - DOMAIN-KEYWORD,youtube,🚀 自动加速
+  - DOMAIN-KEYWORD,gfwlist,🚀 自动加速
+  - GEOIP,CN,DIRECT
+  - DOMAIN-SUFFIX,acl4.ssr,DIRECT
+  - DOMAIN-SUFFIX,ip6-localhost,DIRECT
+  - DOMAIN-SUFFIX,ip6-loopback,DIRECT
+  - DOMAIN-SUFFIX,lan,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,localhost,DIRECT

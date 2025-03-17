@@ -1,0 +1,110 @@
+port: 7891
+socks-port: 7892
+allow-lan: true
+mode: rule
+log-level: info
+
+# Transparent proxy server port for Linux and macOS (Redirect TCP and TProxy UDP)
+redir-port: 7893
+
+# Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
+tproxy-port: 7894
+
+# HTTP(S) and SOCKS4(A)/SOCKS5 server on the same port
+mixed-port: 7890
+
+# bind-address: "*"
+proxies:
+
+  - {name: USA, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+  - {name: HK,  server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+  - {name: JPN, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+
+proxy-groups:
+  - name: 🚀 自动加速
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    # interval: 300
+    # tolerance: 50
+    proxies:
+      - 香港节点
+      - 日本节点
+      - 美国节点
+  - name: 🚀 手动加速
+    type: select
+    proxies:
+      - HK
+      - USA
+      - JPN
+  - name: ♻️ 自动选择
+    # type: url-test
+    type: select
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - HK
+      - USA
+      - JPN
+      - DIRECT
+  - name: 🛑 广告拦截
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+  - name: 香港节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - HK
+  - name: 日本节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - JPN
+  - name: 美国节点
+    type: select
+    # url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 150
+    proxies:
+      - USA
+
+  # 这几个代理地址直接走直连
+  - DOMAIN-SUFFIX,github.com,🚀 自动加速
+  - DOMAIN-SUFFIX,google.com.hk,🚀 自动加速
+  - DOMAIN-SUFFIX,telegram.org,🚀 自动加速
+  - DOMAIN-SUFFIX,telesco.pe,🚀 自动加速
+  - IP-CIDR,91.108.0.0/16,🚀 自动加速,no-resolve
+  - IP-CIDR,109.239.140.0/24,🚀 自动加速,no-resolve
+  - IP-CIDR,149.154.160.0/20,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,🚀 自动加速,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,🚀 自动加速,no-resolve
+  - DOMAIN-SUFFIX,edgedatg.com,🚀 自动加速
+  - DOMAIN-SUFFIX,go.com,🚀 自动加速
+  - DOMAIN-KEYWORD,uk-live,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.co,🚀 自动加速
+  - DOMAIN-SUFFIX,bbc.com,🚀 自动加速
+  - DOMAIN-SUFFIX,apache.org,🚀 自动加速
+  - DOMAIN-SUFFIX,docker.com,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.co,🚀 自动加速
+  - DOMAIN-SUFFIX,elastic.com,🚀 自动加速
+  - DOMAIN-KEYWORD,sci-hub,🚀 自动加速
+  - DOMAIN-KEYWORD,spotify,🚀 自动加速
+  - DOMAIN-KEYWORD,telegram,🚀 自动加速
+  - DOMAIN-KEYWORD,twitter,🚀 自动加速
+  - DOMAIN-KEYWORD,whatsapp,🚀 自动加速
+  - DOMAIN-KEYWORD,youtube,🚀 自动加速
+  - DOMAIN-KEYWORD,gfwlist,🚀 自动加速
+  - GEOIP,CN,DIRECT
+  - DOMAIN-SUFFIX,acl4.ssr,DIRECT
+  - DOMAIN-SUFFIX,ip6-localhost,DIRECT
+  - DOMAIN-SUFFIX,ip6-loopback,DIRECT
+  - DOMAIN-SUFFIX,lan,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,localhost,DIRECT
