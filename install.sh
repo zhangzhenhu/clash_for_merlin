@@ -3,7 +3,7 @@
 source /usr/sbin/helper.sh
 
 # Does the firmware support addons?
-APP_NAME="clash_ui_for_merlin"
+APP_NAME="clash_for_merlin"
 APP_HOME="/jffs/addons/${APP_NAME}"
 nvram get rc_support | grep -q am_addons
 if [ $? != 0 ]

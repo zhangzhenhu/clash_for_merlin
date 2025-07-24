@@ -2,7 +2,7 @@
 
 source /usr/sbin/helper.sh
 
-APP_NAME="clash_ui_for_merlin"
+APP_NAME="clash_for_merlin"
 APP_HOME="/jffs/addons/${APP_NAME}"
 webui_page="/jffs/addons/${APP_NAME}/clashUI.asp"
 
