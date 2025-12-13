@@ -8,6 +8,7 @@ logger -t "service-event" "收到指令 $*"
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 APP_HOME=${SCRIPT_DIR}
+LOG_FILE="${APP_HOME}/log/clash.log"
 
 ARCH=$(uname -m)
 if [ "$ARCH" = "armv7l" ]; then
@@ -17,7 +18,7 @@ elif [ "$ARCH" = "aarch64" ]; then
 else
     CLASH_BIN_NAME="clash-linux-amd64"
 fi
-CLASH_BIN_PATH="${APP_HOME}/bin/clash-linux-armv7"
+CLASH_BIN_PATH="${APP_HOME}/bin/${CLASH_BIN_NAME}"
 
 # A yml config file is required for clash
 CLASH_CONFIG=$(am_settings_get clash_config_path)
@@ -43,7 +44,7 @@ fi
 # Function to start Clash service
 start_clash_service() {
     logger  -t "service-event"  "Starting Clash service"
-    "${CLASH_BIN_PATH}" -d "${CLASH_CONFIG}" -ext-ctl "${CLASH_ctl}" -secret  "${CLASH_secret}" -ext-ui "${APP_HOME}/dashboard/" &
+    "${CLASH_BIN_PATH}" -d "${CLASH_CONFIG}" -ext-ctl "${CLASH_ctl}" -secret  "${CLASH_secret}" -ext-ui "${APP_HOME}/dashboard/" >>"${LOG_FILE}" 2>&1 &
     service clash restart
 }
 

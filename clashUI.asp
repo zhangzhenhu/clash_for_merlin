@@ -6,6 +6,7 @@
     <!-- <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script> -->
     <!-- 引入 JSON5 解析库 -->
     <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/next-json@0.5.1/dist/cjs/index.min.js"></script> -->
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta HTTP-EQUIV="Pragma" CONTENT="no-cache">
@@ -45,24 +46,25 @@
         }
     </style>
     <script>
+        // JSON5=superjson;
         var custom_settings = <% get_custom_settings(); %>;
         var clash_settings = {};
         var clash_service_status = "stopped";
         const fields = [
-            { id: 'clash_external_controller', default: '', key: 'clash_external_controller', source: "custom", },
-            { id: 'clash_secret', default: '', key: 'clash_secret', source: "custom", },
-            { id: 'clash_socks_port', default: '0', key: 'socks-port', source: "clash", },
-            { id: 'clash_allow_lan', default: '', key: 'allow-lan', source: "clash", },
-            { id: 'clash_mode', default: '', key: 'mode', source: "clash", },
+            { id: 'clash_external_controller', default: '', key: 'clash_external_controller', source: "custom", "type": "string"},
+            { id: 'clash_secret', default: '', key: 'clash_secret', source: "custom","type": "string" },
+            { id: 'clash_socks_port', default: '0', key: 'socks-port', source: "clash", "type": "int" },
+            { id: 'clash_allow_lan', default: '', key: 'allow-lan', source: "clash", "type": "bool" },
+            { id: 'clash_mode', default: 'Rule', key: 'mode', source: "clash", "type": "string"},
 
-            { id: 'clash_redir_port', default: '0', key: 'redir-port', source: "clash", },
-            { id: 'clash_tproxy_port', default: '0', key: 'tproxy-port', source: "clash", },
-            { id: 'clash_mixed_port', default: '0', key: 'mixed-port', source: "clash", },
-            { id: 'clash_bind_address', default: '', key: 'bind-address', source: "clash", },
-            { id: 'clash_port', default: '0', key: 'port', source: "clash", },
-            { id: 'clash_ipv6', default: 'false', key: 'ipv6', source: "clash", },
-            { id: 'clash_log-level', default: 'info', key: 'log-level', source: "clash", },
-            { id: 'clash_proxy_groups', default: '', key: 'proxy-groups', source: "clash", }
+            { id: 'clash_redir_port', default: '0', key: 'redir-port', source: "clash","type": "int" },
+            { id: 'clash_tproxy_port', default: '0', key: 'tproxy-port', source: "clash","type": "int" },
+            { id: 'clash_mixed_port', default: '0', key: 'mixed-port', source: "clash", "type": "int"},
+            { id: 'clash_bind_address', default: '', key: 'bind-address', source: "clash", "type": "string"},
+            { id: 'clash_port', default: '0', key: 'port', source: "clash", "type": "int"},
+            { id: 'clash_ipv6', default: 'false', key: 'ipv6', source: "clash", "type": "bool"},
+            { id: 'clash_log-level', default: 'info', key: 'log-level', source: "clash", "type": "string"},
+            // { id: 'clash_proxy_groups', default: '', key: 'proxy-groups', source: "clash", }
         ];
 
         // 从 http://192.168.50.1:9090/configs 读取配置 
@@ -120,6 +122,8 @@
         function saveClashConfig(configData) {
             let token = custom_settings.clash_secret;
             let port = custom_settings.clash_external_controller.split(':')[1];
+            console.log('Saving Clash config:');
+            console.log( configData);
             fetch(`http://${window.location.hostname}:${port}/yml/json`, {
                 method: 'PUT',
                 headers: new Headers({
@@ -130,7 +134,14 @@
                 }),
                 body: JSON.stringify(configData)
             })
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                        });
+                    }
+                    return response.text();
+                })
                 .then(data => {
                     console.log('Config saved:', data);
                     // 提交成功后，重新加载配置
@@ -139,6 +150,7 @@
                 })
                 .catch(error => {
                     console.error('Error saving config:', error);
+                    alert('保存配置失败: ' + error.message);
                 });
         }
         function showEditorError(editor, error) {
@@ -167,19 +179,21 @@
 
         }
         function set_json_editor(editor_id, data) {
-
+            console.log('Setting JSON data to editor:', editor_id, data);
             let editor = ace.edit(editor_id);
 
             editor.setValue(JSON5.stringify(data, null, 2), -1);
         }
         function get_json_data(editor_id) {
             let editor = ace.edit(editor_id);
+            console.log('Getting JSON data from editor:', editor_id);
+            let data = {};
             try {
                 let value = editor.getValue().trim();
                 if (!value) {
                     return {};
                 }
-                let data = JSON5.parse(value);
+                data = JSON5.parse(value);
                 editor.session.setAnnotations([]);
             } catch (e) {
                 showEditorError(editor, e);
@@ -211,7 +225,7 @@
             // 显示错误
             editor.session.on('change', function () {
                 console.log(editor.container.id +' editor changed');
-                // console.log(editor.getValue());
+                console.log(editor.getValue());
                 try {
                     JSON5.parse(editor.getValue());
                     editor.session.setAnnotations([]);
@@ -257,7 +271,23 @@
                     alert(`${field.key} 不能为空`);
                     throw new Error(`${field.key} 不能为空`);
                 }
-                field.source[field.key] = value;
+
+                   // 这里一些字段必须是整型,按照filed.type判断和处理
+                if(field.type == "int"){
+                    value = parseInt(value);
+                }else   if(field.type == "bool"){
+                    value = value == "true";
+                }
+                
+
+                if(field.source == "custom"){
+                    custom_settings[field.key] = value;
+                }
+                else{
+                    clash_settings[field.key] = value;
+                }
+             
+                // field.source[field.key] = value;
             });
             try {
                 clash_settings["dns"] = get_json_data("clash_dns");
@@ -270,6 +300,7 @@
             }
             /* Store object as a string in the amng_custom hidden input field */
             document.getElementById('amng_custom').value = JSON.stringify(custom_settings);
+            // console.log('Updating Clash settings:', clash_settings);
             saveClashConfig(clash_settings);
             /* Apply */
 

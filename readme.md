@@ -107,7 +107,7 @@ chmod +x cp bin/*
 # yacd
 
 集成了 clash 的 ``yacd`` web 界面，可以方便查看流量、日志啥的。
-通过 地址 ``http://{你的路由器 ip}:9090/ui`` 访问。
+通过 地址 ``http://{你的路由器ip}:9090/ui`` 访问。
 
 ``yacd`` 就放在了本项目的 ``dashboard/`` 目录下，你可以替换成别的 web 方案
 
