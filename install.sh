@@ -3,7 +3,7 @@
 set -e
 
 # Clash for Merlin - 一键安装脚本
-# 用法: curl -sL https://github.com/zhangzhenhu/clash_ui_for_merlin/releases/latest/download/install.sh | sh
+# 用法: curl -sL https://github.com/zhangzhenhu/clash_for_merlin/releases/latest/download/install.sh | sh
 
 GITHUB_REPO="zhangzhenhu/clash_for_merlin"
 APP_NAME="clash_for_merlin"
