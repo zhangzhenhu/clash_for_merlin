@@ -47,17 +47,10 @@ if [ $? != 0 ]; then
     exit 5
 fi
 
-# 检查固件版本是否满足要求 (384.15+)
-# 使用 buildno 进行版本比较
-FIRMWARE_BUILD=$(nvram get buildno)
-if [ -z "$FIRMWARE_BUILD" ]; then
-    logger -t "${APP_NAME}" "无法获取固件版本"
-    exit 5
-fi
-
-# buildno >= 38415
-if [ "$FIRMWARE_BUILD" -lt 38415 ] 2>/dev/null; then
-    logger -t "${APP_NAME}" "固件版本过低，需要 384.15 或更高版本 (当前: ${FIRMWARE_BUILD})"
+# 检查 addons 支持
+nvram get rc_support | grep -q am_addons
+if [ $? != 0 ]; then
+    logger -t "${APP_NAME}" "This firmware does not support addons!"
     exit 5
 fi
 
