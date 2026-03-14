@@ -96,22 +96,22 @@ else
 fi
 
 if [ "$am_webui_page" = "none" ]; then
-    echo  "${APP_NAME}" "Unable to install clashUI"
+    echo   "Unable to install clashUI"
     exit 5
 fi
-echo "${APP_NAME}" "Mounting MyPage as $am_webui_page"
+echo  "Mounting MyPage as $am_webui_page"
 
 # 实际上web系统会访问 /www/user{xx}.asp 系列文件
 # 然而 /www/user{xx}.asp 是软连接，指向/www/user/user{xx}.asp
 # 所以我们只需要把实际的文件移动到 /www/user/user{xx}.asp 即可
 # Copy custom page
 cp "$webui_page" /www/user/"$am_webui_page"
-logger -t "${APP_NAME}" "已复制 Web UI 文件"
+echo "已复制 Web UI 文件"
 
 # 备份原始 menuTree.js
-if [ -f /www/require/modules/menuTree.js ] && [ ! -f "${APP_HOME}/menuTree.js.bak" ]; then
-    cp /www/require/modules/menuTree.js "${APP_HOME}/menuTree.js.bak"
-fi
+# if [ -f /www/require/modules/menuTree.js ] && [ ! -f "${APP_HOME}/menuTree.js.bak" ]; then
+#     cp /www/require/modules/menuTree.js "${APP_HOME}/menuTree.js.bak"
+# fi
 
 # 复制到 app home 并修改
 if [ -f /www/require/modules/menuTree.js ]; then
@@ -135,31 +135,18 @@ fi
 
 # 挂载
 mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
-logger -t "${APP_NAME}" "已挂载 menuTree.js"
+echo "已挂载 menuTree.js"
 
 # 配置 service-start 脚本实现开机自动恢复
 SERVICE_START="/jffs/scripts/service-start"
 START_SCRIPT="${APP_HOME}/service-start.sh"
 
-# 创建启动恢复脚本 (使用 bind mount)
-cat > "$START_SCRIPT" << 'SCRIPT_EOF'
-#!/bin/sh
-APP_NAME="clash_for_merlin"
-APP_HOME="/jffs/addons/${APP_NAME}"
-MENUTREE_SRC="${APP_HOME}/menuTree.js"
-MENUTREE_DST="/www/require/modules/menuTree.js"
-
-# 如果已挂载则先卸载
-if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
-    umount "$MENUTREE_DST" 2>/dev/null
+# 检查用户提供的 service-start.sh 是否存在
+if [ ! -f "$START_SCRIPT" ]; then
+    echo "错误: 未找到 service-start.sh"
+    exit 1
 fi
 
-# 挂载 menuTree.js
-if [ -f "$MENUTREE_SRC" ]; then
-    mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
-    logger -t "$APP_NAME" "已挂载 menuTree.js"
-fi
-SCRIPT_EOF
 chmod +x "$START_SCRIPT"
 
 # 在 service-start 中添加启动调用
@@ -167,7 +154,7 @@ SERVICE_LINE="${START_SCRIPT}"
 if [ -f "$SERVICE_START" ]; then
     if ! grep -qF "$START_SCRIPT" "$SERVICE_START" 2>/dev/null; then
         echo "$SERVICE_LINE" >> "$SERVICE_START"
-        logger -t "${APP_NAME}" "已注册启动脚本"
+        echo "已注册启动脚本"
     fi
 else
     echo "#!/bin/sh" > "$SERVICE_START"

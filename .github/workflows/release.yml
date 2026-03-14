@@ -26,6 +26,7 @@ jobs:
             init.sh \
             uninstall.sh \
             clash_service.sh \
+            service-start.sh \
             clashUI.asp \
             configs/ \
             dashboard/ \
