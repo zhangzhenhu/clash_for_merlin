@@ -28,17 +28,10 @@ if [ -n "$AM_WEBUI_PAGE" ]; then
     rm -f /www/user/"$AM_WEBUI_PAGE"
 fi
 
-# 从 jffs 的备份中恢复原始 menuTree.js
-if [ -f "${APP_HOME}/menuTree.js.bak" ]; then
-    cp -f "${APP_HOME}/menuTree.js.bak" /www/require/modules/menuTree.js
-fi
-
-# 清理菜单链接
-BASENAME=$(basename "$webui_page" 2>/dev/null)
-if [ -n "$BASENAME" ] && [ -f /www/require/modules/menuTree.js ]; then
-    if grep -q "tabName: \"Clash\"" /www/require/modules/menuTree.js 2>/dev/null; then
-        sed -i "s/{url: \"${BASENAME}\", tabName: \"Clash\"},//g" /www/require/modules/menuTree.js
-    fi
+# 卸载 menuTree.js 的 bind mount
+MENUTREE_DST="/www/require/modules/menuTree.js"
+if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
+    umount "$MENUTREE_DST" 2>/dev/null
 fi
 
 # Remove settings

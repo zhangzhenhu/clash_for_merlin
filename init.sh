@@ -113,27 +113,35 @@ if [ -f /www/require/modules/menuTree.js ] && [ ! -f "${APP_HOME}/menuTree.js.ba
     cp /www/require/modules/menuTree.js "${APP_HOME}/menuTree.js.bak"
 fi
 
+# 复制到 app home 并修改
 if [ -f /www/require/modules/menuTree.js ]; then
-    cp /www/require/modules/menuTree.js /tmp/
+    cp /www/require/modules/menuTree.js "${APP_HOME}/menuTree.js"
 fi
 
-# Insert link at the end of the Tools menu.  Match partial string, since tabname can change between builds
-if ! grep -q "{url: \"$am_webui_page\", tabName: \"Clash\"}" /tmp/menuTree.js 2>/dev/null; then
-    sed -i "/url: \"Tools_OtherSettings.asp\", tabName:/a {url: \"$am_webui_page\", tabName: \"Clash\"}," /tmp/menuTree.js
+# 添加 Clash 菜单项
+if ! grep -q "{url: \"$am_webui_page\", tabName: \"Clash\"}" "${APP_HOME}/menuTree.js" 2>/dev/null; then
+    sed -i "/url: \"Tools_OtherSettings.asp\", tabName:/a {url: \"$am_webui_page\", tabName: \"Clash\"}," "${APP_HOME}/menuTree.js"
     logger -t "${APP_NAME}" "已添加菜单项"
 fi
 
-# 将 menuTree.js 的修改持久化写入 jffs
-cp /tmp/menuTree.js "${APP_HOME}/menuTree.js"
+# 使用 bind mount 挂载修改后的 menuTree.js
+MENUTREE_SRC="${APP_HOME}/menuTree.js"
+MENUTREE_DST="/www/require/modules/menuTree.js"
 
-# 立即应用修改到系统（当前会话也生效）
-cp /tmp/menuTree.js /www/require/modules/menuTree.js
+# 如果已经挂载，先卸载
+if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
+    umount "$MENUTREE_DST" 2>/dev/null
+fi
+
+# 挂载
+mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
+logger -t "${APP_NAME}" "已挂载 menuTree.js"
 
 # 配置 service-start 脚本实现开机自动恢复
 SERVICE_START="/jffs/scripts/service-start"
 START_SCRIPT="${APP_HOME}/service-start.sh"
 
-# 创建启动恢复脚本
+# 创建启动恢复脚本 (使用 bind mount)
 cat > "$START_SCRIPT" << 'SCRIPT_EOF'
 #!/bin/sh
 APP_NAME="clash_for_merlin"
@@ -141,14 +149,15 @@ APP_HOME="/jffs/addons/${APP_NAME}"
 MENUTREE_SRC="${APP_HOME}/menuTree.js"
 MENUTREE_DST="/www/require/modules/menuTree.js"
 
-# 检查 menuTree.js 是否需要更新
-if [ -f "$MENUTREE_SRC" ] && [ -f "$MENUTREE_DST" ]; then
-    # 检查源文件是否包含 Clash 菜单项
-    if grep -q 'tabName: "Clash"' "$MENUTREE_SRC"; then
-        # 复制覆盖系统文件
-        cp "$MENUTREE_SRC" "$MENUTREE_DST"
-        logger -t "$APP_NAME" "已恢复 menuTree.js"
-    fi
+# 如果已挂载则先卸载
+if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
+    umount "$MENUTREE_DST" 2>/dev/null
+fi
+
+# 挂载 menuTree.js
+if [ -f "$MENUTREE_SRC" ]; then
+    mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
+    logger -t "$APP_NAME" "已挂载 menuTree.js"
 fi
 SCRIPT_EOF
 chmod +x "$START_SCRIPT"
