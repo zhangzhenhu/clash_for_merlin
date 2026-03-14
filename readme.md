@@ -1,27 +1,75 @@
-# 哈哈
+# Clash for Merlin
 
-又来瞎几把折腾了。
+为华硕路由器梅林固件（asuswrt-merlin）打造的 Clash 代理插件。
 
-为华硕路由器原版的梅林固件（asuswrt-merlin）弄一个 clash 的插件。
+> 参考官方文档：https://github.com/RMerl/asuswrt-merlin.ng/wiki/Addons-API
 
-参靠官方文档：
+## 特性
 
-https://github.com/RMerl/asuswrt-merlin.ng/wiki/Addons-API
+- 支持 armv7 / armv8 架构
+- 集成 yacd Web UI
+- 通过 RESTful API 管理配置
+- 开机自动恢复菜单
 
+---
 
-官方的这个插件机制功能非常有限，最大的一个限制是web 界面和后端没办法交互很大体积的配置信息，恰好 clash 的配置文件一般又很大，尤其那些代理规则。这导致无法在 web 界面管理这些配置。
+## 安装方式
 
+### 方式一：一键安装（推荐）
 
-最后走了一条邪路，就是利用 clash 的 restful api 实现配置的交互。然而 clash 本身自带的restful API 功能有限，不能直接读写 yml 配置文件，没办法自己找到 clash 的源码（原作者已经删库跑路了，幸好提前做了备份）魔改了一下，增加了几个 API，用于读写 yml 配置文件。
+> ⚠️ 需要路由器能访问 GitHub
 
+```shell
+curl -sL https://github.com/zhangzhenhu/clash_for_merlin/releases/latest/download/install.sh | sh
+```
 
-我的路由器是 AX86U，芯片是 ``armv8`` 的。为了大家方便，我在 ``bin/`` 下面同时放了 ``armv7`` 和 ``armv8`` 两个版本的二进制执行文件，脚本可以自动根据当前芯片适配选择对应的文件。
+### 方式二：手动安装
 
+如果路由器无法访问 GitHub（如没有代理），可按以下步骤操作：
 
-# 安装
-注意：按照官方的说明固件版本必须是 ``384.15`` 以上的才支持这种插件方式。
+#### 1. 在电脑上下载安装包
 
-把本项目全部文件自己拷贝到路由器的目录 ``/jffs/addons/clash_for_merlin/`` 下（注意必须一模一样，不能改名字）。
+访问 GitHub Release 页面下载：
+- https://github.com/zhangzhenhu/clash_for_merlin/releases
+
+下载以下文件：
+- `clash_for_merlin.tar.gz` - 安装包
+- `install.sh` - 安装脚本
+
+#### 2. 上传到路由器
+
+```shell
+# 通过 SCP 上传（替换为你的路由器 IP）
+scp clash_for_merlin.tar.gz admin@192.168.1.1:/tmp/
+scp install.sh admin@192.168.1.1:/tmp/
+```
+
+#### 3. 在路由器上执行安装
+
+```shell
+# SSH 登录路由器
+ssh admin@192.168.1.1
+
+# 解压并安装
+cd /tmp
+tar -xzf clash_for_merlin.tar.gz -C /jffs/addons/
+cd /jffs/addons/clash_for_merlin
+
+# 设置权限
+chmod +x *.sh
+chmod +x bin/*
+
+# 执行安装
+sh ./init.sh
+```
+
+---
+
+## 原有安装方式
+
+> 注意：固件版本必须 ``384.15`` 以上才支持插件方式。
+
+把本项目全部文件拷贝到路由器的目录 ``/jffs/addons/clash_for_merlin/`` 下（注意必须一模一样，不能改名字）。
 
 ```shell
 # 首先增加可执行权限
@@ -29,24 +77,37 @@ cd /jffs/addons/clash_for_merlin/
 chmod +x *.sh
 chmod +x *.asp
 chmod +x bin/*
-# 执行安装脚本
 
-./install.sh
+# 执行安装脚本
+./init.sh
 ```
 
-浏览器登录路由器管理网站，登录后点击左侧工具栏 ``Tools`` ,在 ``Tools`` 里能看到一个名为 ``Clash`` 的 tab 页。
+---
 
+## 使用方法
 
-# 编译 Clash
+1. 浏览器登录路由器管理网站
+2. 点击左侧工具栏 **Tools**
+3. 在 Tools 里能看到一个名为 **Clash** 的 tab 页
+
+### Web UI
+
+- ** Clash 管理界面**: http://路由器IP:9090/ui
+- ** API 地址**: http://路由器IP:9090
+
+---
+
+## 编译 Clash
 
 如果你对我提供的 ``clash`` 不放心，可以自己去找 ``clash`` 的开源代码，然后按照下面的说明自己改下代码重新编译即可。
 
+> 注：原版 Clash 的 RESTful API 不能直接读写 YAML 配置文件，本项目使用了魔改版的 Clash，增加了几个 API 用于读写 yml 配置文件。
 
-**步骤 1：增加代码文件**
+### 步骤 1：增加代码文件
 
 把文件 ``clash_patch/hub/route/yml.go`` 放到 ``clash`` 源码相同的的路径 ``hub/route/yml.go`` 下。
 
-**步骤 2：修改文件**
+### 步骤 2：修改文件
 
 如下所示，修改``clash`` 源码文件 ``hub/route/server.go``
 
@@ -71,8 +132,7 @@ chmod +x bin/*
 
 ```
 
-
-**步骤 3：编译 clash**
+### 步骤 3：编译 clash
 
 重新编译 clash，编译命令。
 
@@ -85,31 +145,41 @@ make linux-armv8
 ```
 
 ```shell
-# armv8  
+# armv7  
 make linux-armv7
 
 ```
 
-
 编译完成后，为文件增加可执行权限。
 
 ```shell
-chmod +x cp bin/*
+chmod +x bin/*
 
 ```
 
-
-
-**步骤 4：**
+### 步骤 4：
 
 用你编译好的文件，替换本项目 ``bin/`` 目录下对应的文件即可。
 
-# yacd
+---
 
-集成了 clash 的 ``yacd`` web 界面，可以方便查看流量、日志啥的。
-通过 地址 ``http://{你的路由器ip}:9090/ui`` 访问。
+## 技术说明
 
-``yacd`` 就放在了本项目的 ``dashboard/`` 目录下，你可以替换成别的 web 方案
+官方的插件机制功能非常有限，最大的限制是 Web 界面和后端没办法交互很大体积的配置信息。恰好 Clash 的配置文件一般又很大，尤其那些代理规则。这导致无法在 Web 界面管理这些配置。
 
+本项目走了一条邪路：利用 Clash 的 RESTful API 实现配置的交互。然而 Clash 本身自带的 RESTful API 功能有限，不能直接读写 YML 配置文件。所以魔改了一下 Clash 源码，增加了几个 API，用于读写 YML 配置文件。
 
+路由器是 AX86U，芯片是 ``armv8``。项目在 ``bin/`` 下面同时放了 ``armv7`` 和 ``armv8`` 两个版本的二进制执行文件，脚本可以自动根据当前芯片适配选择对应的文件。
 
+---
+
+## 卸载
+
+```shell
+# 方式一：一键卸载
+curl -sL https://github.com/zhangzhenhu/clash_for_merlin/releases/latest/download/uninstall.sh | sh
+
+# 方式二：手动卸载
+cd /jffs/addons/clash_for_merlin
+sh ./uninstall.sh
+```
