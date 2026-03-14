@@ -8,6 +8,7 @@ set -e
 GITHUB_REPO="zhangzhenhu/clash_for_merlin"
 APP_NAME="clash_for_merlin"
 APP_HOME="/jffs/addons/${APP_NAME}"
+VERSION="latest"
 
 echo "========================================="
 echo "  Clash for Merlin 一键安装脚本"
@@ -17,6 +18,21 @@ echo "========================================="
 if [ ! -d "/jffs" ] || [ ! -w "/jffs" ]; then
     echo "错误: jffs 分区未挂载或不可写"
     exit 1
+fi
+
+# 检查是否已安装
+if [ -d "${APP_HOME}" ] && [ -f "${APP_HOME}/init.sh" ]; then
+    echo "检测到 Clash for Merlin 已安装"
+    read -p "是否重新安装? (y/N): " confirm
+    case "$confirm" in
+        [yY]|[yY][eE][sS])
+            echo "开始重新安装..."
+            ;;
+        *)
+            echo "取消安装"
+            exit 0
+            ;;
+    esac
 fi
 
 # 获取最新 release 版本
