@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set release version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          tar -czvf release/clash_for_merlin.tar.gz \
+            init.sh \
+            uninstall.sh \
+            clash_service.sh \
+            clashUI.asp \
+            configs/ \
+            dashboard/ \
+            bin/
+
+      - name: Create install script
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cat > release/install.sh << EOF
+          #!/bin/sh
+
+          set -e
+
+          # Clash for Merlin - 一键安装脚本
+          # 用法: curl -sL https://github.com/zhangzhenhu/clash_ui_for_merlin/releases/latest/download/install.sh | sh
+
+          GITHUB_REPO="zhangzhenhu/clash_ui_for_merlin"
+          APP_NAME="clash_for_merlin"
+          APP_HOME="/jffs/addons/\${APP_NAME}"
+          VERSION="${VERSION}"
+
+          echo "========================================="
+          echo "  Clash for Merlin 一键安装脚本"
+          echo "  版本: v\${VERSION}"
+          echo "========================================="
+
+          # 检查 jffs 分区
+          if [ ! -d "/jffs" ] || [ ! -w "/jffs" ]; then
+              echo "错误: jffs 分区未挂载或不可写"
+              exit 1
+          fi
+
+          # 下载 release 包
+          TMP_DIR="/tmp/clash_install"
+          rm -rf "\$TMP_DIR"
+          mkdir -p "\$TMP_DIR"
+
+          echo "下载安装包..."
+          curl -fsSL "https://github.com/\${GITHUB_REPO}/releases/download/v\${VERSION}/clash_for_merlin.tar.gz" -o "\${TMP_DIR}/clash_for_merlin.tar.gz"
+
+          # 解压到应用目录
+          echo "解压文件..."
+          rm -rf "\${APP_HOME}"
+          mkdir -p "\${APP_HOME}"
+          tar -xzf "\${TMP_DIR}/clash_for_merlin.tar.gz" -C "\${APP_HOME}"
+
+          # 设置权限
+          echo "设置权限..."
+          chmod +x "\${APP_HOME}/"*.sh
+          chmod +x "\${APP_HOME}/bin/"*
+
+          # 清理临时文件
+          rm -rf "\$TMP_DIR"
+
+          # 执行实际安装
+          echo "执行安装..."
+          cd "\${APP_HOME}"
+          sh ./init.sh
+
+          echo ""
+          echo "========================================="
+          echo "  安装完成！"
+          echo "========================================="
+          echo ""
+          echo "请在浏览器中访问路由器管理页面"
+          echo "点击 Tools -> Clash 进入 Clash 管理界面"
+          echo ""
+          echo "Web UI 访问地址: http://路由器IP:9090/ui"
+          echo ""
+          EOF
+          chmod +x release/install.sh
+
+      - name: Create uninstall script
+        run: |
+          cat > release/uninstall.sh << 'SCRIPT'
+          #!/bin/sh
+
+          set -e
+
+          # Clash for Merlin - 一键卸载脚本
+
+          APP_NAME="clash_for_merlin"
+          APP_HOME="/jffs/addons/${APP_NAME}"
+
+          echo "========================================="
+          echo "  Clash for Merlin 卸载"
+          echo "========================================="
+
+          if [ ! -d "$APP_HOME" ]; then
+              echo "未检测到 Clash for Merlin 安装"
+              exit 0
+          fi
+
+          cd "${APP_HOME}"
+          sh ./uninstall.sh
+
+          echo ""
+          echo "卸载完成"
+          echo ""
+          SCRIPT
+          chmod +x release/uninstall.sh
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/clash_for_merlin.tar.gz
+            release/install.sh
+            release/uninstall.sh
+          draft: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
