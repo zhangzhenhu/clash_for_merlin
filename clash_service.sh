@@ -12,18 +12,19 @@ PID_FILE="${APP_HOME}/clash.pid"
 
 
 logger -t "clash_service" "ARCH：${ARCH} 收到指令: $SERVICE $ACTION"
-
-case "$ARCH" in
-    armv7l)
-        CLASH_BIN_NAME="clash-linux-armv7"
-        ;;
-    aarch64)
-        CLASH_BIN_NAME="clash-linux-armv8"
-        ;;
-    *)
-        CLASH_BIN_NAME="clash-linux-amd64"
-        ;;
-esac
+echo "ARCH：${ARCH} 收到指令: $SERVICE $ACTION"
+CLASH_BIN_NAME="clash"
+# case "$ARCH" in
+#     armv7l)
+#         CLASH_BIN_NAME="clash-linux-armv7"
+#         ;;
+#     aarch64)
+#         CLASH_BIN_NAME="clash-linux-armv8"
+#         ;;
+#     *)
+#         CLASH_BIN_NAME="clash-linux-amd64"
+#         ;;
+# esac
 CLASH_BIN_PATH="${APP_HOME}/bin/${CLASH_BIN_NAME}"
 
 # A yml config file is required for clash
@@ -47,12 +48,14 @@ fi
 # 检查 Clash 二进制文件是否存在
 if [ ! -f "$CLASH_BIN_PATH" ]; then
     logger -t "clash_service" "错误: Clash 二进制文件不存在: $CLASH_BIN_PATH"
+    echo "错误: Clash 二进制文件不存在: $CLASH_BIN_PATH"
     exit 1
 fi
 
 # 检查配置文件目录是否存在
 if [ ! -d "$CLASH_CONFIG" ]; then
     logger -t "clash_service" "错误: 配置目录不存在: $CLASH_CONFIG"
+    echo "错误: 配置目录不存在: $CLASH_CONFIG"
     exit 1
 fi
 
@@ -77,27 +80,32 @@ start_clash_service() {
     if is_clash_running; then
         local pid=$(get_clash_pid)
         logger -t "clash_service" "Clash 已在运行 (PID: $pid)"
+        echo "Clash 已在运行 (PID: $pid)"
         return 0
     fi
 
     logger -t "clash_service" "启动 Clash 服务"
+    echo "启动 Clash 服务"
     "${CLASH_BIN_PATH}" -d "${CLASH_CONFIG}" -ext-ctl "${CLASH_ctl}" -secret "${CLASH_secret}" -ext-ui "${APP_HOME}/dashboard/" >> "${LOG_FILE}" 2>&1 &
 
     local new_pid=$!
     echo "$new_pid" > "$PID_FILE"
     logger -t "clash_service" "Clash 已启动 (PID: $new_pid)"
+    echo "Clash 已启动 (PID: $new_pid)"
 }
 
 # Function to stop Clash service
 stop_clash_service() {
     if ! is_clash_running; then
         logger -t "clash_service" "Clash 未在运行"
+        echo "clash_service" "Clash 未在运行"
         [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
         return 0
     fi
 
     local pid=$(get_clash_pid)
     logger -t "clash_service" "停止 Clash 服务 (PID: $pid)"
+    echo "停止 Clash 服务 (PID: $pid)"
 
     kill "$pid" 2>/dev/null
     sleep 1
@@ -109,6 +117,7 @@ stop_clash_service() {
 
     rm -f "$PID_FILE"
     logger -t "clash_service" "Clash 已停止"
+    echo "Clash 已停止"
 }
 
 # Function to restart Clash service

@@ -21,11 +21,11 @@
     <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script type="text/javascript" language="JavaScript" src="/validator.js"></script>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/theme-monokai.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/mode-json5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/worker-json.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/worker-json.js"></script>
     <style>
         .error-marker {
             position: absolute;
@@ -67,7 +67,7 @@
             // { id: 'clash_proxy_groups', default: '', key: 'proxy-groups', source: "clash", }
         ];
 
-        // 从 http://192.168.50.1:9090/configs 读取配置 
+        // 从 http://192.168.50.1:9090/configs 读取配置
         function fetchClashConfig() {
             let port = custom_settings.clash_external_controller.split(':')[1];
             let token = custom_settings.clash_secret;
@@ -278,7 +278,7 @@
                 }else   if(field.type == "bool"){
                     value = value == "true";
                 }
-                
+
 
                 if(field.source == "custom"){
                     custom_settings[field.key] = value;
@@ -286,7 +286,7 @@
                 else{
                     clash_settings[field.key] = value;
                 }
-             
+
                 // field.source[field.key] = value;
             });
             try {
@@ -405,8 +405,8 @@
                                                         <td>
                                                             <select id="clash_service_status"
                                                                 title="Clash Service Status">
-                                                                <option value="running">Running</option>
                                                                 <option value="stopped">Stopped</option>
+                                                                <option value="running">Running</option>
                                                             </select>
                                                             <span>服务的状态</span>
                                                         </td>

@@ -138,12 +138,12 @@ mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
 echo "已挂载 menuTree.js"
 
 # 配置 service-start 脚本实现开机自动恢复
-SERVICE_START="/jffs/scripts/service-start"
+SERVICE_START="/jffs/scripts/services-start"
 START_SCRIPT="${APP_HOME}/service-start.sh"
 
 # 检查用户提供的 service-start.sh 是否存在
 if [ ! -f "$START_SCRIPT" ]; then
-    echo "错误: 未找到 service-start.sh"
+    echo "错误: 未找到 ${START_SCRIPT}"
     exit 1
 fi
 
@@ -160,7 +160,7 @@ else
     echo "#!/bin/sh" > "$SERVICE_START"
     echo "$SERVICE_LINE" >> "$SERVICE_START"
     chmod +x "$SERVICE_START"
-    logger -t "${APP_NAME}" "已创建 service-start 脚本"
+    echo "已创建 service-start 脚本"
 fi
 
 # 设置 Web UI 配置
