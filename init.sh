@@ -16,7 +16,7 @@ check_clash_ui_installed() {
     local keyword="Clash UI Management"
     local user_dir="/www/user"
     local found_page=""
-    
+
     # Check if any file in /www/user directory contains the keyword
     if [ -d "$user_dir" ]; then
         for file in "$user_dir"/*.asp; do
@@ -26,13 +26,13 @@ check_clash_ui_installed() {
             fi
         done
     fi
-    
+
     # 通过全局变量返回结果
     if [ -n "$found_page" ]; then
         am_webui_page="$found_page"
         return 0  # Found installed Clash UI
     fi
-    
+
     return 1  # Not installed
 }
 
@@ -88,6 +88,7 @@ am_webui_page="none"
 # 判断是否已经安装过
 if check_clash_ui_installed; then
     logger -t "${APP_NAME}" "Clash UI is already installed (page: $am_webui_page)"
+     exit 5
 else
     # Obtain the first available mount point in $am_webui_page
     # 这个指令会为 ${webui_page} 分配一个唯一的文件名称：user{xx}.asp，并存储在变量 am_webui_page
