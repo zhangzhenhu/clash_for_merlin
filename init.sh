@@ -57,7 +57,7 @@ fi
 # 创建应用目录
 if [ ! -d "$APP_HOME" ]; then
     mkdir -p "$APP_HOME"
-    logger -t "${APP_NAME}" "创建应用目录: $APP_HOME"
+    echo "${APP_NAME}" "创建应用目录: $APP_HOME"
 fi
 
 # 创建日志目录
@@ -72,23 +72,23 @@ CONFIG_YML="${APP_HOME}/configs/config.yaml"
 if [ ! -f "$CONFIG_YML" ]; then
     if [ -f "${APP_HOME}/configs/config_template.yml" ]; then
         cp "${APP_HOME}/configs/config_template.yml" "$CONFIG_YML"
-        logger -t "${APP_NAME}" "已生成配置文件: $CONFIG_YML"
+        echo "${APP_NAME}" "已生成配置文件: $CONFIG_YML"
     else
-        logger -t "${APP_NAME}" "警告: 未找到配置模板文件"
+        echo "${APP_NAME}" "警告: 未找到配置模板文件"
     fi
 fi
 
 webui_page="${APP_HOME}/clashUI.asp"
 if [ ! -f "$webui_page" ]; then
-    logger -t "${APP_NAME}" "Missing clashUI.asp"
+    echo "${APP_NAME}" "Missing clashUI.asp"
     exit 5
 fi
 
 am_webui_page="none"
 # 判断是否已经安装过
 if check_clash_ui_installed; then
-    logger -t "${APP_NAME}" "Clash UI is already installed (page: $am_webui_page)"
-     exit 5
+    echo "Clash UI is already installed (page: $am_webui_page)"
+    exit 5
 else
     # Obtain the first available mount point in $am_webui_page
     # 这个指令会为 ${webui_page} 分配一个唯一的文件名称：user{xx}.asp，并存储在变量 am_webui_page
@@ -96,10 +96,10 @@ else
 fi
 
 if [ "$am_webui_page" = "none" ]; then
-    logger -t "${APP_NAME}" "Unable to install clashUI"
+    echo  "${APP_NAME}" "Unable to install clashUI"
     exit 5
 fi
-logger -t "${APP_NAME}" "Mounting MyPage as $am_webui_page"
+echo "${APP_NAME}" "Mounting MyPage as $am_webui_page"
 
 # 实际上web系统会访问 /www/user{xx}.asp 系列文件
 # 然而 /www/user{xx}.asp 是软连接，指向/www/user/user{xx}.asp

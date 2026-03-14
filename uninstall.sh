@@ -13,8 +13,20 @@ webui_page="${APP_HOME}/clashUI.asp"
 # 先停掉clash 服务
 service clash stop 2>/dev/null
 
-# Remove custom page
-rm -f /www/user/$(basename "$webui_page") 2>/dev/null
+# 查找并删除 Web UI 页面
+AM_WEBUI_PAGE=""
+if [ -d "/www/user" ]; then
+    for f in /www/user/*.asp; do
+        if [ -f "$f" ] && grep -q "Clash UI Management" "$f" 2>/dev/null; then
+            AM_WEBUI_PAGE=$(basename "$f")
+            break
+        fi
+    done
+fi
+
+if [ -n "$AM_WEBUI_PAGE" ]; then
+    rm -f /www/user/"$AM_WEBUI_PAGE"
+fi
 
 # 从 jffs 的备份中恢复原始 menuTree.js
 if [ -f "${APP_HOME}/menuTree.js.bak" ]; then

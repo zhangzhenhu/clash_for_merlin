@@ -54,7 +54,8 @@ ssh admin@192.168.1.1
 
 # 解压并安装
 cd /tmp
-tar -xzf clash_for_merlin.tar.gz -C /jffs/addons/
+mkdir -p /jffs/addons/clash_for_merlin
+tar -xzf clash_for_merlin.tar.gz -C /jffs/addons/clash_for_merlin
 cd /jffs/addons/clash_for_merlin
 
 # 设置权限
