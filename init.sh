@@ -48,14 +48,16 @@ if [ $? != 0 ]; then
 fi
 
 # 检查固件版本是否满足要求 (384.15+)
-FIRMWARE_VERSION=$(nvram get firmver)
-if [ -z "$FIRMWARE_VERSION" ]; then
+# 使用 buildno 进行版本比较
+FIRMWARE_BUILD=$(nvram get buildno)
+if [ -z "$FIRMWARE_BUILD" ]; then
     logger -t "${APP_NAME}" "无法获取固件版本"
     exit 5
 fi
-# 简单版本比较: 38415 = 384.15
-if [ "$FIRMWARE_VERSION" -lt 38415 ]; then
-    logger -t "${APP_NAME}" "固件版本过低，需要 384.15 或更高版本"
+
+# buildno >= 38415
+if [ "$FIRMWARE_BUILD" -lt 38415 ] 2>/dev/null; then
+    logger -t "${APP_NAME}" "固件版本过低，需要 384.15 或更高版本 (当前: ${FIRMWARE_BUILD})"
     exit 5
 fi
 
