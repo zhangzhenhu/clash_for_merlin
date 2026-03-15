@@ -114,6 +114,9 @@ echo  "Mounting MyPage as $am_webui_page"
 cp "$webui_page" /www/user/"$am_webui_page"
 echo "已复制 Web UI 文件"
 
+# 保存 webui 页面名称，供重启后使用
+echo "$am_webui_page" > "${APP_HOME}/.webui_page"
+
 # 备份原始 menuTree.js
 # if [ -f /www/require/modules/menuTree.js ] && [ ! -f "${APP_HOME}/menuTree.js.bak" ]; then
 #     cp /www/require/modules/menuTree.js "${APP_HOME}/menuTree.js.bak"

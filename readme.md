@@ -63,8 +63,8 @@ rm clash_for_merlin_mihomo-linux-arm64-*.tar.gz
 2. 点击左侧 **Tools**
 3. 在 Tools 里能看到 **Clash** 标签页
 
-- **Clash 管理界面(yacd)**: http://路由器IP:9090/ui
-- **API 地址**: http://路由器IP:9090
+- **Clash 管理界面(yacd)**: `http://路由器IP:9090/ui`
+- **API 地址**: `http://路由器IP:9090`
 
 
 

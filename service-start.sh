@@ -4,6 +4,19 @@ APP_HOME="/jffs/addons/${APP_NAME}"
 MENUTREE_SRC="${APP_HOME}/menuTree.js"
 MENUTREE_DST="/www/require/modules/menuTree.js"
 CLASH_TMP="/tmp/clash"
+WEBUI_PAGE_FILE="${APP_HOME}/.webui_page"
+
+# 恢复 Web UI 页面
+if [ -f "$WEBUI_PAGE_FILE" ]; then
+    AM_WEBUI_PAGE=$(cat "$WEBUI_PAGE_FILE")
+    WEBUI_SRC="${APP_HOME}/clashUI.asp"
+    WEBUI_DST="/www/user/${AM_WEBUI_PAGE}"
+    if [ -f "$WEBUI_SRC" ] && [ ! -f "$WEBUI_DST" ]; then
+        cp "$WEBUI_SRC" "$WEBUI_DST"
+        logger -t "$APP_NAME" "已恢复 Web UI: $AM_WEBUI_PAGE"
+        echo "已恢复 Web UI: $AM_WEBUI_PAGE"
+    fi
+fi
 
 # 挂载 menuTree.js - 使用 grep 检测是否已挂载修改后的版本
 if grep -q "Clash" "$MENUTREE_DST" 2>/dev/null; then
@@ -74,4 +87,10 @@ if [ -n "$CLASH_VERSION" ]; then
     CLASH_VERSION_CLEAN=$(echo "$CLASH_VERSION" | tr ' ' '_')
     am_settings_set clash_version "$CLASH_VERSION_CLEAN"
     logger -t "$APP_NAME" "已设置 clash_version: $CLASH_VERSION_CLEAN"
+fi
+
+# 启动 Clash 服务
+if [ -f "${APP_HOME}/clash_service.sh" ]; then
+    sh "${APP_HOME}/clash_service.sh" start clash
+    logger -t "$APP_NAME" "已启动 Clash 服务"
 fi
