@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -48,9 +48,7 @@ jobs:
               cp "$binary" "${TEMP_DIR}/binaries/"
 
               # 打包
-              cd release
-              tar -czvf "clash_for_merlin_${binary_name}" "clash_for_merlin_${binary_name%.gz}"
-              cd ..
+              tar -czvf "release/clash_for_merlin_${binary_name}" -C release "clash_for_merlin_${binary_name%.gz}"
 
               # 清理临时目录
               rm -rf "release/clash_for_merlin_${binary_name%.gz}"
@@ -61,56 +59,13 @@ jobs:
           
           ls -la release/
 
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-packages
-          path: |
-            release/*.tar.gz
-          retention-days: 1
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set release version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-packages
-          path: release
-          merge-multiple: true
-
-      - name: Prepare release files
-        run: |
-          VERSION=${{ steps.version.outputs.VERSION }}
-
-          mkdir -p release/final
-
-          # 复制安装脚本
-          cp install.sh release/final/
-          cp uninstall.sh release/final/
-          chmod +x release/final/install.sh release/final/uninstall.sh
-
-          # 移动所有平台包到 final 目录
-          for f in release/clash_for_merlin_*; do
-            if [ -f "$f" ]; then
-              cp "$f" release/final/
-            fi
-          done
-
-          ls -la release/final/
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: release/final/*
+          files: |
+            release/clash_for_merlin_*
+            install.sh
+            uninstall.sh
           draft: false
           generate_release_notes: true
         env:
