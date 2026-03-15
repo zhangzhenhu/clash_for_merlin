@@ -73,11 +73,6 @@ proxy-groups:
       - USA
       - JPN
       - DIRECT
-  - name: 🛑 广告拦截
-    type: select
-    proxies:
-      - REJECT
-      - DIRECT
   - name: 香港节点
     type: select
     # url: http://www.gstatic.com/generate_204
@@ -170,6 +165,20 @@ dns:
   #   "www.baidu.com": "114.114.114.114"
   #   "+.internal.crop.com": "10.0.0.1"
 
+# RESTful API CORS标头配置
+external-controller-cors:
+  allow-origins:
+    - "*"
+  allow-private-network: true
+
+geox-url:
+  geoip: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.data"
+  mmdb: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
+
+geo-auto-update: false # 是否自动更新 geodata
+geo-update-interval: 24 # 更新间隔，单位：小时
+
 # clash 的规则文件，支持自定义规则，可以根据自己的需求添加规则
 # 详细文档请参考：https://lancellc.gitbook.io/clash/clash-config-file/rule-providers
 rules:
@@ -202,9 +211,26 @@ rules:
   - DOMAIN-KEYWORD,google,🚀 自动加速
   - DOMAIN-KEYWORD,gfwlist,🚀 自动加速
   # - GEOIP,CN,DIRECT
-  - DOMAIN-SUFFIX,acl4.ssr,DIRECT
-  - DOMAIN-SUFFIX,ip6-localhost,DIRECT
-  - DOMAIN-SUFFIX,ip6-loopback,DIRECT
-  - DOMAIN-SUFFIX,lan,DIRECT
-  - DOMAIN-SUFFIX,local,DIRECT
-  - DOMAIN-SUFFIX,localhost,DIRECT
+  - RULE-SET,cn,DIRECT
+  - GEOSITE,category-ads-all,REJECT
+  - GEOSITE,private,DIRECT
+  - GEOSITE,youtube,🚀 自动加速
+  - GEOSITE,google,🚀 自动加速
+  - GEOSITE,twitter,🚀 自动加速
+  - GEOSITE,pixiv,🚀 自动加速
+  - GEOSITE,category-scholar-!cn,🚀 自动加速
+  - GEOSITE,biliintl,🚀 自动加速
+  - GEOSITE,onedrive,DIRECT
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,apple-cn,DIRECT
+  - GEOSITE,steam@cn,DIRECT
+  - GEOSITE,category-games@cn,DIRECT
+  - GEOSITE,geolocation-!cn,🚀 自动加速
+  - GEOSITE,cn,DIRECT
+  #GEOIP 规则
+  - GEOIP,private,DIRECT,no-resolve
+  - GEOIP,telegram,🚀 自动加速
+  - GEOIP,JP,🚀 自动加速
+  - GEOIP,CN,DIRECT
+  - DST-PORT,80/8080/443/8443,🚀 自动加速
+  - MATCH,DIRECT
