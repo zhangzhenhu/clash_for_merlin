@@ -53,14 +53,19 @@ jobs:
 
               # 清理临时目录
               rm -rf "clash_for_merlin_${binary_name%.gz}"
+              
+              echo "Created: clash_for_merlin_${binary_name}"
             fi
           done
+          
+          ls -la release/
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-packages
-          path: release/clash_for_merlin_*
+          path: |
+            release/*.tar.gz
           retention-days: 1
 
   release:
