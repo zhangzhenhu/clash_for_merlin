@@ -50,9 +50,10 @@ jobs:
               # 打包
               cd release
               tar -czvf "clash_for_merlin_${binary_name}" "clash_for_merlin_${binary_name%.gz}"
+              cd ..
 
               # 清理临时目录
-              rm -rf "clash_for_merlin_${binary_name%.gz}"
+              rm -rf "release/clash_for_merlin_${binary_name%.gz}"
               
               echo "Created: clash_for_merlin_${binary_name}"
             fi
