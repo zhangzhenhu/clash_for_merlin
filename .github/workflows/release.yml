@@ -79,6 +79,7 @@ jobs:
         with:
           name: release-packages
           path: release
+          merge-multiple: true
 
       - name: Prepare release files
         run: |
