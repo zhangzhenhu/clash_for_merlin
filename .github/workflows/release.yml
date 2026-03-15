@@ -92,10 +92,11 @@ jobs:
           cp uninstall.sh release/final/
           chmod +x release/final/install.sh release/final/uninstall.sh
 
-          # 重命名各平台包
+          # 移动各平台包到 final 目录
           for dir in release/release-*/; do
-            platform=$(basename "$dir" | sed 's/clash_for_merlin_//')
-            mv "$dir"* "release/final/clash_for_merlin_${platform}.tar.gz"
+            if [ -f "$dir"clash_for_merlin_*.tar.gz ]; then
+              cp "$dir"*.tar.gz release/final/
+            fi
           done
 
           ls -la release/final/
