@@ -107,7 +107,7 @@ jobs:
             release/final/clash_for_merlin_clash-linux-armv5.tar.gz
             release/final/clash_for_merlin_clash-linux-armv6.tar.gz
             release/final/clash_for_merlin_clash-linux-armv7.tar.gz
-            release/final/clash_for_merlin_clash-linux-arm64.tar.gz
+            release/final/clash_for_merlin_clash-linux-armv8.tar.gz
             release/final/install.sh
             release/final/uninstall.sh
           draft: false
