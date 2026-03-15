@@ -48,10 +48,8 @@ jobs:
               mkdir -p "${TEMP_DIR}/binaries"
               cp "$binary" "${TEMP_DIR}/binaries/"
 
-              # 打包
-              cd release
-              tar -czvf "../clash_for_merlin_${binary_name%.gz}.tar.gz" "clash_for_merlin"
-              cd ..
+              # 打包到 release 目录
+              (cd release && tar -czvf "../release/clash_for_merlin_${binary_name%.gz}.tar.gz" "clash_for_merlin")
 
               # 清理临时目录
               rm -rf release/clash_for_merlin
