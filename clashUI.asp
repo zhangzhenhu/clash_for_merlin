@@ -3,10 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <!-- 本地 ace 编辑器 -->
-    <script src="ace/ace.js"></script>
-    <script src="ace/theme-monokai.js"></script>
-    <script src="ace/mode-json5.js"></script>
+    <!-- 引入 JSON5 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta HTTP-EQUIV="Pragma" CONTENT="no-cache">
@@ -21,6 +19,10 @@
     <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script type="text/javascript" language="JavaScript" src="/validator.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/theme-monokai.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/mode-json.js"></script>
 
     <style>
         .error-marker {
@@ -79,12 +81,32 @@
                     clash_settings = data;
                     clash_service_status = "running";
                     updateClashConfig(); // Reinitialize the form with the fetched data
+                     fetchClashVersion();
                 })
                 .catch(error => {
                     clash_service_status = "stopped";
                     // console.error('Error fetching Clash config:', error);
                     document.getElementById('clash_service_status').value = 'stopped';
                     alert('Clash 服务检测异常，可能没启动: ' + error.message);
+                });
+        }
+        // 从 http://192.168.50.1:9090/version 读取版本配置
+        function fetchClashVersion() {
+            let port = custom_settings.clash_external_controller.split(':')[1];
+            let token = custom_settings.clash_secret;
+            fetch(`http://${window.location.hostname}:${port}/version`, {
+                headers: new Headers({
+                    'Authorization': `Bearer ${token}`
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Clash version:', data);
+                    document.getElementById('clash_version').value = data.version;
+                })
+                .catch(error => {
+                    console.log('Clash version 读取失败:'+ error.message);
+                    // alert('Clash 服务检测异常，可能没启动: ' + error.message);
                 });
         }
 
@@ -233,12 +255,22 @@
         function initial() {
             SetCurrentPage();
             show_menu();
-            initial_json_editor("clash_proxies");
-            initial_json_editor("clash_proxy_groups");
-            initial_json_editor("clash_rules");
-            initial_json_editor("clash_dns");
-            document.querySelector(".tablinks").click();
-            fetchClashConfig(); // Fetch the config on page load
+
+            // 等待 ace 加载完成
+            function waitForAce() {
+                if (typeof ace !== 'undefined') {
+                    initial_json_editor("clash_proxies");
+                    initial_json_editor("clash_proxy_groups");
+                    initial_json_editor("clash_rules");
+                    initial_json_editor("clash_dns");
+                    document.querySelector(".tablinks").click();
+                    fetchClashConfig();
+
+                } else {
+                    setTimeout(waitForAce, 100);
+                }
+            }
+            waitForAce();
         }
         function updateClashConfig() {
             /* Update the form fields with the current values */
@@ -405,6 +437,16 @@
                                                                 <option value="running">Running</option>
                                                             </select>
                                                             <span>服务的状态</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>clash version</th>
+                                                        <td>
+                                                            <input type="text" maxlength="20" class="input_25_table"
+                                                                id="clash_version" autocorrect="off"
+                                                                autocapitalize="off" title="Clash version"
+                                                                placeholder="">
+                                                            <span>Clash 核心的版本信息</span>
                                                         </td>
                                                     </tr>
                                                     <tr>

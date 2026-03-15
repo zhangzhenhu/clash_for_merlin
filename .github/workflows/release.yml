@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
@@ -14,10 +14,10 @@ jobs:
     strategy:
       matrix:
         platform:
-          - armv5
-          - armv6
-          - armv7
-          - arm64
+          - clash-linux-armv5
+          - clash-linux-armv6
+          - clash-linux-armv7
+          - clash-linux-armv8
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,13 +30,13 @@ jobs:
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           PLATFORM=${{ matrix.platform }}
-          
+
           mkdir -p release
-          
+
           # 创建临时目录
           TEMP_DIR="release/clash_for_merlin_${PLATFORM}"
           mkdir -p "${TEMP_DIR}"
-          
+
           # 复制公共文件
           cp init.sh "${TEMP_DIR}/"
           cp uninstall.sh "${TEMP_DIR}/"
@@ -45,16 +45,16 @@ jobs:
           cp clashUI.asp "${TEMP_DIR}/"
           cp -r configs "${TEMP_DIR}/"
           cp -r dashboard "${TEMP_DIR}/"
-          
+
           # 创建 bin 目录并复制对应平台的二进制
           mkdir -p "${TEMP_DIR}/bin"
-          cp "binaries/mihomo-linux-${PLATFORM}" "${TEMP_DIR}/bin/clash"
+          cp "binaries/${PLATFORM}" "${TEMP_DIR}/bin/clash"
           chmod +x "${TEMP_DIR}/bin/clash"
-          
+
           # 打包
           cd release
           tar -czvf "clash_for_merlin_${PLATFORM}.tar.gz" "clash_for_merlin_${PLATFORM}"
-          
+
           # 清理临时目录
           rm -rf "clash_for_merlin_${PLATFORM}"
 
@@ -84,30 +84,30 @@ jobs:
       - name: Prepare release files
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          
+
           mkdir -p release/final
-          
+
           # 复制安装脚本
           cp install.sh release/final/
           cp uninstall.sh release/final/
           chmod +x release/final/install.sh release/final/uninstall.sh
-          
+
           # 重命名各平台包
           for dir in release/release-*/; do
             platform=$(basename "$dir" | sed 's/clash_for_merlin_//')
             mv "$dir"* "release/final/clash_for_merlin_${platform}.tar.gz"
           done
-          
+
           ls -la release/final/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/final/clash_for_merlin_armv5.tar.gz
-            release/final/clash_for_merlin_armv6.tar.gz
-            release/final/clash_for_merlin_armv7.tar.gz
-            release/final/clash_for_merlin_arm64.tar.gz
+            release/final/clash_for_merlin_clash-linux-armv5.tar.gz
+            release/final/clash_for_merlin_clash-linux-armv6.tar.gz
+            release/final/clash_for_merlin_clash-linux-armv7.tar.gz
+            release/final/clash_for_merlin_clash-linux-arm64.tar.gz
             release/final/install.sh
             release/final/uninstall.sh
           draft: false
