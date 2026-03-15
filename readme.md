@@ -107,7 +107,51 @@ chmod +x /tmp/clash
 
 如果你想使用自己编译的 mihomo：
 
-### 1. 编译
+### 1.修改 mihomo 源码
+
+去 `https://github.com/MetaCubeX/mihomo/releases` 下载最新版本代码。
+
+1. 把本项目的 `mihomo_patch/hub/route/yml.go` 文件复制到 `mihomo` 对应的源码位置。
+2. 修改 `mihomo`  源码文件 `hub/route/server.go`
+  
+```go
+
+			func router(isDebug bool, secret string, dohServer string, cors Cors) *chi.Mux {
+        ...
+				r.Group(func(r chi.Router) {
+          ...
+					r.Mount("/configs", configRouter())
+					r.Mount("/proxies", proxyRouter())
+					r.Mount("/group", groupRouter())
+					r.Mount("/rules", ruleRouter())
+					r.Mount("/connections", connectionRouter())
+					r.Mount("/providers/proxies", proxyProviderRouter())
+					r.Mount("/providers/rules", ruleProviderRouter())
+					r.Mount("/cache", cacheRouter())
+					r.Mount("/dns", dnsRouter())
+					if !embedMode { // disallow restart in embed mode
+						r.Mount("/restart", restartRouter())
+					}
+					r.Mount("/upgrade", upgradeRouter())
+					// 添加这行代码
+					r.Mount("/yml", ymlRouter())
+					
+					addExternalRouters(r)
+			
+				})
+			...
+			}
+
+```
+
+3.修改 `mihomo` 的 'Makefile' 文件，在第13行增加 `VERSION=v{你下载的mihomo版本号}` ，类似这样
+
+```Makefile
+VERSION="v1.19.21"
+```
+
+
+### 2. 编译
 
 ```shell
 # arm64
@@ -117,7 +161,7 @@ make linux-arm64
 make linux-armv7
 ```
 
-### 2. 替换二进制
+### 3. 替换二进制
 
 将编译好的二进制文件复制到 `binaries/` 目录：
 
