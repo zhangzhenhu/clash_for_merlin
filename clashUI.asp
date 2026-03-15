@@ -3,10 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script> -->
-    <!-- 引入 JSON5 解析库 -->
-    <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/next-json@0.5.1/dist/cjs/index.min.js"></script> -->
+    <!-- 本地 ace 编辑器 -->
+    <script src="ace/ace.js"></script>
+    <script src="ace/theme-monokai.js"></script>
+    <script src="ace/mode-json5.js"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta HTTP-EQUIV="Pragma" CONTENT="no-cache">
@@ -22,10 +22,6 @@
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script type="text/javascript" language="JavaScript" src="/validator.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/theme-monokai.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/mode-json5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.5/worker-json.js"></script>
     <style>
         .error-marker {
             position: absolute;
