@@ -116,31 +116,20 @@ chmod +x /tmp/clash
   
 ```go
 
-			func router(isDebug bool, secret string, dohServer string, cors Cors) *chi.Mux {
-        ...
-				r.Group(func(r chi.Router) {
-          ...
-					r.Mount("/configs", configRouter())
-					r.Mount("/proxies", proxyRouter())
-					r.Mount("/group", groupRouter())
-					r.Mount("/rules", ruleRouter())
-					r.Mount("/connections", connectionRouter())
-					r.Mount("/providers/proxies", proxyProviderRouter())
-					r.Mount("/providers/rules", ruleProviderRouter())
-					r.Mount("/cache", cacheRouter())
-					r.Mount("/dns", dnsRouter())
-					if !embedMode { // disallow restart in embed mode
-						r.Mount("/restart", restartRouter())
-					}
-					r.Mount("/upgrade", upgradeRouter())
-					// 添加这行代码
-					r.Mount("/yml", ymlRouter())
-					
-					addExternalRouters(r)
-			
-				})
-			...
-			}
+func router(isDebug bool, secret string, dohServer string, cors Cors) *chi.Mux {
+  //...
+  r.Group(func(r chi.Router) {
+    //...
+    if !embedMode { // disallow restart in embed mode
+      r.Mount("/restart", restartRouter())
+    }
+    r.Mount("/upgrade", upgradeRouter())
+    // 添加这行代码
+    r.Mount("/yml", ymlRouter())
+    addExternalRouters(r)
+  })
+ // ...
+}
 
 ```
 
