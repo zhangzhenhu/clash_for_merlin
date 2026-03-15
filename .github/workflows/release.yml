@@ -30,8 +30,9 @@ jobs:
             if [ -f "$binary" ]; then
               binary_name=$(basename "$binary")
               
-              # 创建临时目录
-              TEMP_DIR="release/clash_for_merlin_${binary_name%.gz}"
+              # 创建临时目录 (直接用 clash_for_merlin 名称)
+              TEMP_DIR="release/clash_for_merlin"
+              rm -rf "${TEMP_DIR}"
               mkdir -p "${TEMP_DIR}"
 
               # 复制公共文件
@@ -48,12 +49,13 @@ jobs:
               cp "$binary" "${TEMP_DIR}/binaries/"
 
               # 打包
-              tar -czvf "release/clash_for_merlin_${binary_name}" -C release "clash_for_merlin_${binary_name%.gz}"
+              cd release
+              tar -czvf "../clash_for_merlin_${binary_name%.gz}.tar.gz" "clash_for_merlin"
 
               # 清理临时目录
-              rm -rf "release/clash_for_merlin_${binary_name%.gz}"
+              rm -rf "clash_for_merlin"
               
-              echo "Created: clash_for_merlin_${binary_name}"
+              echo "Created: clash_for_merlin_${binary_name%.gz}.tar.gz"
             fi
           done
           
@@ -63,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/clash_for_merlin_*
+            release/*.tar.gz
             install.sh
             uninstall.sh
           draft: false
