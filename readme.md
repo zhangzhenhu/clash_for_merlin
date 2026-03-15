@@ -2,7 +2,7 @@
 
 为华硕路由器梅林固件（asuswrt-merlin）打造的 Clash 代理插件。
 
-> 参考官方文档：https://github.com/RMerl/asuswrt-merlin.ng/wiki/Addons-API
+> 参考官方文档： `https://github.com/RMerl/asuswrt-merlin.ng/wiki/Addons-API`
 
 > 注意：固件版本必须 ``384.15`` 以上才支持插件方式。
 
@@ -47,6 +47,10 @@ cd /jffs/addons/clash_for_merlin
 # 设置权限并执行安装
 chmod +x *.sh
 sh ./init.sh
+
+# 安装成功后，可以删除安装包，释放内存
+rm clash_for_merlin_mihomo-linux-arm64-*.tar.gz 
+
 ```
 
 ---
@@ -59,37 +63,29 @@ sh ./init.sh
 2. 点击左侧 **Tools**
 3. 在 Tools 里能看到 **Clash** 标签页
 
-- **Clash 管理界面**: http://路由器IP:9090/ui
+- **Clash 管理界面(yacd)**: http://路由器IP:9090/ui
 - **API 地址**: http://路由器IP:9090
 
-### 终端代理配置
 
-在 Clash 页面 Basic Info 标签页底部，可以找到终端代理配置命令：
-
-```shell
-export https_proxy=http://192.168.50.1:7890 http_proxy=http://192.168.50.1:7890 all_proxy=socks5://192.168.50.1:7891
-```
-
-复制后在终端中运行即可使用代理。
-
-### 代理节点测速
-
-在 **代理节点** 标签页可以：
-- 查看所有代理节点状态
-- 点击「测速」按钮测试单个节点延迟
-- 点击「测速全部节点」批量测试所有节点
 
 ---
 
-## 关于存储空间
+## 关于 Clash 内核
 
-### 二进制文件处理
+本项目目前集成了两个版本：
 
-由于 `/jffs` 分区空间有限（通常只有 30-50MB），mihomo 二进制文件（约 25-40MB）以 gzip 压缩格式存储在 `binaries/` 目录中。
+- `github.com/Dreamacro/clash` 已经删库跑路很久了，永远停留在v1.4.2-1，二进制文件10MB左右，但是新功能没有了。
+- `github.com/MetaCubeX/mihomo` 还在持续更新，但是编译后的二进制文件很大，30MB以上了。
+
+
+### 关于存储空间不足的问题
+
+由于 `/jffs` 分区空间有限（通常只有 30-50MB），
+mihomo 二进制文件（约 25-40MB）以 gzip 压缩格式存储在 `binaries/` 目录中。
 
 **工作原理：**
 
-1. 开机时 `service-start.sh` 自动把压缩的二进制文件解压二到 `/tmp/clash`
+1. 开机时 `service-start.sh` 自动把 `binaries/` 目录下压缩的二进制文件解压二到 `/tmp/clash`
 2. 通过软链接 `/jffs/addons/clash_for_merlin/bin/clash` 指向 `/tmp/clash`
 3. `/tmp` 分区通常空间较大（256MB+），足够存放解压后的二进制
 
@@ -104,6 +100,8 @@ chmod +x /tmp/clash
 ```
 
 ---
+
+
 
 ## 编译自定义 mihomo
 
