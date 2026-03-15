@@ -15,10 +15,36 @@ mixed-port: 7890
 
 bind-address: "0.0.0.0"
 proxies:
-
-  - {name: USA, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
-  - {name: HK,  server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
-  - {name: JPN, server: xxx, port: 0, type: ss, cipher: aes-128-gcm, password: 12334, plugin: obfs, plugin-opts: {mode: http, host: "d.microsoft.com"}}
+  - {
+      name: USA,
+      server: xxx,
+      port: 0,
+      type: ss,
+      cipher: aes-128-gcm,
+      password: 12334,
+      plugin: obfs,
+      plugin-opts: { mode: http, host: "d.microsoft.com" },
+    }
+  - {
+      name: HK,
+      server: xxx,
+      port: 0,
+      type: ss,
+      cipher: aes-128-gcm,
+      password: 12334,
+      plugin: obfs,
+      plugin-opts: { mode: http, host: "d.microsoft.com" },
+    }
+  - {
+      name: JPN,
+      server: xxx,
+      port: 0,
+      type: ss,
+      cipher: aes-128-gcm,
+      password: 12334,
+      plugin: obfs,
+      plugin-opts: { mode: http, host: "d.microsoft.com" },
+    }
 
 proxy-groups:
   - name: 🚀 自动加速
@@ -144,8 +170,6 @@ dns:
   #   "www.baidu.com": "114.114.114.114"
   #   "+.internal.crop.com": "10.0.0.1"
 
-
-
 # clash 的规则文件，支持自定义规则，可以根据自己的需求添加规则
 # 详细文档请参考：https://lancellc.gitbook.io/clash/clash-config-file/rule-providers
 rules:
@@ -177,7 +201,7 @@ rules:
   - DOMAIN-KEYWORD,youtube,🚀 自动加速
   - DOMAIN-KEYWORD,google,🚀 自动加速
   - DOMAIN-KEYWORD,gfwlist,🚀 自动加速
-  - GEOIP,CN,DIRECT
+  # - GEOIP,CN,DIRECT
   - DOMAIN-SUFFIX,acl4.ssr,DIRECT
   - DOMAIN-SUFFIX,ip6-localhost,DIRECT
   - DOMAIN-SUFFIX,ip6-loopback,DIRECT

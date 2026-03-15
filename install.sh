@@ -46,24 +46,56 @@ fi
 
 echo "最新版本: v${LATEST_TAG}"
 
+# 检测设备架构
+echo "检测设备架构..."
+ARCH=$(uname -m)
+echo "检测到架构: $ARCH"
+
+# 根据架构选择对应的 mihomo 包
+# 华硕梅林固件常用架构:
+# - aarch64 (64位) - 如 RT-AX86U, RT-AX88U, RT-AX92U 等
+# - armv7l (32位) - 如 RT-AC68U, RT-AC88U, RT-AC3100 等
+case "$ARCH" in
+    aarch64)
+        PKG_NAME="mihomo-linux-arm64-v1.19.21"
+        echo "选择: arm64 (64位) 版本"
+        ;;
+    armv7l|armv6l|armhf)
+        PKG_NAME="mihomo-linux-armv7-v1.19.21"
+        echo "选择: armv7 (32位) 版本"
+        ;;
+    *)
+        echo "警告: 未知的架构 $ARCH，尝试使用 armv7 版本"
+        PKG_NAME="mihomo-linux-armv7-v1.19.21"
+        ;;
+esac
+
+RELEASE_FILE="clash_for_merlin_${PKG_NAME}.tar.gz"
+DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_TAG}/${RELEASE_FILE}"
+
+echo "下载安装包: ${RELEASE_FILE}..."
+
 # 下载 release 包
 TMP_DIR="/tmp/clash_install"
 rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
 
-echo "下载安装包..."
-curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_TAG}/clash_for_merlin.tar.gz" -o "${TMP_DIR}/clash_for_merlin.tar.gz"
+if ! curl -fsSL "$DOWNLOAD_URL" -o "${TMP_DIR}/${RELEASE_FILE}"; then
+    echo "错误: 下载失败，请检查网络连接或版本是否支持当前架构"
+    rm -rf "$TMP_DIR"
+    exit 1
+fi
 
 # 解压到应用目录
 echo "解压文件..."
 rm -rf "${APP_HOME}"
 mkdir -p "${APP_HOME}"
-tar -xzf "${TMP_DIR}/clash_for_merlin.tar.gz" -C "${APP_HOME}"
+tar -xzf "${TMP_DIR}/${RELEASE_FILE}" -C "${APP_HOME}"
 
 # 设置权限
 echo "设置权限..."
 chmod +x "${APP_HOME}/"*.sh
-chmod +x "${APP_HOME}/bin/"*
+chmod +x "${APP_HOME}/bin/"* 2>/dev/null || true
 
 # 清理临时文件
 rm -rf "$TMP_DIR"

@@ -50,6 +50,7 @@
         var clash_service_status = "stopped";
         const fields = [
             { id: 'clash_external_controller', default: '', key: 'clash_external_controller', source: "custom", "type": "string"},
+            // { id: 'clash_version', default: '', key: 'clash_version', source: "custom", "type": "string"},
             { id: 'clash_secret', default: '', key: 'clash_secret', source: "custom","type": "string" },
             { id: 'clash_socks_port', default: '0', key: 'socks-port', source: "clash", "type": "int" },
             { id: 'clash_allow_lan', default: '', key: 'allow-lan', source: "clash", "type": "bool" },
@@ -92,22 +93,23 @@
         }
         // 从 http://192.168.50.1:9090/version 读取版本配置
         function fetchClashVersion() {
-            let port = custom_settings.clash_external_controller.split(':')[1];
-            let token = custom_settings.clash_secret;
-            fetch(`http://${window.location.hostname}:${port}/version`, {
-                headers: new Headers({
-                    'Authorization': `Bearer ${token}`
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Clash version:', data);
-                    document.getElementById('clash_version').value = data.version;
-                })
-                .catch(error => {
-                    console.log('Clash version 读取失败:'+ error.message);
-                    // alert('Clash 服务检测异常，可能没启动: ' + error.message);
-                });
+        document.getElementById('clash_version').innerText=custom_settings.clash_version;
+            // let port = custom_settings.clash_external_controller.split(':')[1];
+            // let token = custom_settings.clash_secret;
+            // fetch(`http://${window.location.hostname}:${port}/version`, {
+            //     headers: new Headers({
+            //         'Authorization': `Bearer ${token}`
+            //     })
+            // })
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         console.log('Clash version:', data);
+            //         document.getElementById('clash_version').value = data.version;
+            //     })
+            //     .catch(error => {
+            //         console.log('Clash version 读取失败:'+ error.message);
+            //         // alert('Clash 服务检测异常，可能没启动: ' + error.message);
+            //     });
         }
 
 
@@ -283,6 +285,7 @@
             set_json_editor("clash_proxy_groups", clash_settings['proxy-groups']);
             set_json_editor("clash_rules", clash_settings['rules']);
             set_json_editor("clash_dns", clash_settings['dns']);
+            updateProxyCommands();
         }
 
         function SetCurrentPage() {
@@ -353,6 +356,46 @@
             }
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
+        }
+
+        // Update terminal proxy commands display
+        function updateProxyCommands() {
+            var controller = custom_settings.clash_external_controller || "127.0.0.1:9090";
+            var parts = controller.split(':');
+            var host = parts[0] === "0.0.0.0" ? "127.0.0.1" : parts[0];
+            var port = parts[1] || "9090";
+            
+            var lanIp = window.location.hostname;
+            var httpPort = document.getElementById('clash_port').value || port;
+            var socksPort = document.getElementById('clash_socks_port').value || "7891";
+            
+            var cmd = "export https_proxy=http://" + lanIp + ":" + httpPort + " http_proxy=http://" + lanIp + ":" + httpPort + " all_proxy=socks5://" + lanIp + ":" + socksPort;
+            
+            document.getElementById('proxy_command').textContent = cmd;
+            
+            // Update Web UI link
+            var webUiUrl = "http://" + lanIp + ":" + port + "/ui/";
+            document.getElementById('webui_link').href = webUiUrl;
+        }
+
+        // Copy proxy command to clipboard
+        function copyProxyCommand() {
+            var cmd = document.getElementById('proxy_command').textContent;
+            navigator.clipboard.writeText(cmd).then(function() {
+                alert('已复制到剪贴板');
+            }, function(err) {
+                console.error('复制失败: ', err);
+            });
+        }
+
+        // Open Web UI in new tab
+        function openWebUI() {
+            var controller = custom_settings.clash_external_controller || "127.0.0.1:9090";
+            var parts = controller.split(':');
+            var port = parts[1] || "9090";
+            var lanIp = window.location.hostname;
+            var webUiUrl = "http://" + lanIp + ":" + port + "/ui/";
+            window.open(webUiUrl, '_blank');
         }
 
 
@@ -442,11 +485,8 @@
                                                     <tr>
                                                         <th>clash version</th>
                                                         <td>
-                                                            <input type="text" maxlength="20" class="input_25_table"
-                                                                id="clash_version" autocorrect="off"
-                                                                autocapitalize="off" title="Clash version"
-                                                                placeholder="">
-                                                            <span>Clash 核心的版本信息</span>
+
+                                                            <span  id="clash_version" >Clash 核心的版本信息</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -582,6 +622,17 @@
                                                             <span>仅当 `allow-lan` 为 `true` 时有效。 rule: 基于规则的数据包路由。global:
                                                                 所有数据包将被转发到单个节点。direct: 直接将数据包转发到互联网 </span>
 
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>终端代理配置</th>
+                                                        <td>
+                                                            <div style="margin-bottom: 8px;">
+                                                                <code id="proxy_command" style="background: #2d2d2d; color: #f8f8f2; padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-family: monospace; font-size: 12px;">export https_proxy=http://192.168.1.1:7890 http_proxy=http://192.168.1.1:7890 all_proxy=socks5://192.168.1.1:7891</code>
+                                                            </div>
+                                                            <button type="button" class="button_gen" onclick="copyProxyCommand();">复制命令</button>
+                                                            <button type="button" class="button_gen" onclick="openWebUI();">打开 Web UI</button>
+                                                            <span>在终端中运行此命令即可使用代理</span>
                                                         </td>
                                                     </tr>
 

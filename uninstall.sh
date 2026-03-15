@@ -30,7 +30,7 @@ fi
 
 # 卸载 menuTree.js 的 bind mount
 MENUTREE_DST="/www/require/modules/menuTree.js"
-if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
+if grep -q "^/dev/.* $MENUTREE_DST " /proc/mounts 2>/dev/null; then
     umount "$MENUTREE_DST" 2>/dev/null
 fi
 
