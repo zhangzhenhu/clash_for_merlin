@@ -25,7 +25,7 @@ CLASH_BIN_NAME="clash"
 #         CLASH_BIN_NAME="clash-linux-amd64"
 #         ;;
 # esac
-CLASH_BIN_PATH="${APP_HOME}/bin/${CLASH_BIN_NAME}"
+CLASH_BIN_PATH="${APP_HOME}/bin/clash"
 
 # A yml config file is required for clash
 CLASH_CONFIG=$(am_settings_get clash_config_path)

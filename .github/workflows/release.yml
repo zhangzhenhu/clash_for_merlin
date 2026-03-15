@@ -11,13 +11,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - clash-linux-armv5
-          - clash-linux-armv6
-          - clash-linux-armv7
-          - clash-linux-armv8
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,43 +19,48 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Create release package for ${{ matrix.platform }}
+      - name: Create release packages
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          PLATFORM=${{ matrix.platform }}
-
+          
           mkdir -p release
 
-          # 创建临时目录
-          TEMP_DIR="release/clash_for_merlin_${PLATFORM}"
-          mkdir -p "${TEMP_DIR}"
+          # 扫描 binaries 目录下的所有压缩文件
+          for binary in binaries/*.gz; do
+            if [ -f "$binary" ]; then
+              binary_name=$(basename "$binary")
+              
+              # 创建临时目录
+              TEMP_DIR="release/clash_for_merlin_${binary_name%.gz}"
+              mkdir -p "${TEMP_DIR}"
 
-          # 复制公共文件
-          cp init.sh "${TEMP_DIR}/"
-          cp uninstall.sh "${TEMP_DIR}/"
-          cp clash_service.sh "${TEMP_DIR}/"
-          cp service-start.sh "${TEMP_DIR}/"
-          cp clashUI.asp "${TEMP_DIR}/"
-          cp -r configs "${TEMP_DIR}/"
-          cp -r dashboard "${TEMP_DIR}/"
+              # 复制公共文件
+              cp init.sh "${TEMP_DIR}/"
+              cp uninstall.sh "${TEMP_DIR}/"
+              cp clash_service.sh "${TEMP_DIR}/"
+              cp service-start.sh "${TEMP_DIR}/"
+              cp clashUI.asp "${TEMP_DIR}/"
+              cp -r configs "${TEMP_DIR}/"
+              cp -r dashboard "${TEMP_DIR}/"
 
-          # 创建 bin 目录并复制对应平台的二进制
-          mkdir -p "${TEMP_DIR}/bin"
-          cp "binaries/${PLATFORM}" "${TEMP_DIR}/bin/clash"
-          chmod +x "${TEMP_DIR}/bin/clash"
+              # 创建 binaries 目录并复制压缩文件
+              mkdir -p "${TEMP_DIR}/binaries"
+              cp "$binary" "${TEMP_DIR}/binaries/"
 
-          # 打包
-          cd release
-          tar -czvf "clash_for_merlin_${PLATFORM}.tar.gz" "clash_for_merlin_${PLATFORM}"
+              # 打包
+              cd release
+              tar -czvf "clash_for_merlin_${binary_name}" "clash_for_merlin_${binary_name%.gz}"
 
-          # 清理临时目录
-          rm -rf "clash_for_merlin_${PLATFORM}"
+              # 清理临时目录
+              rm -rf "clash_for_merlin_${binary_name%.gz}"
+            fi
+          done
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.platform }}
-          path: release/clash_for_merlin_${{ matrix.platform }}.tar.gz
+          name: release-packages
+          path: release/clash_for_merlin_*
           retention-days: 1
 
   release:
@@ -79,6 +77,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          name: release-packages
           path: release
 
       - name: Prepare release files
@@ -92,10 +91,10 @@ jobs:
           cp uninstall.sh release/final/
           chmod +x release/final/install.sh release/final/uninstall.sh
 
-          # 移动各平台包到 final 目录
-          for dir in release/release-*/; do
-            if [ -f "$dir"clash_for_merlin_*.tar.gz ]; then
-              cp "$dir"*.tar.gz release/final/
+          # 移动所有平台包到 final 目录
+          for f in release/clash_for_merlin_*; do
+            if [ -f "$f" ]; then
+              cp "$f" release/final/
             fi
           done
 
@@ -104,13 +103,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            release/final/clash_for_merlin_clash-linux-armv5.tar.gz
-            release/final/clash_for_merlin_clash-linux-armv6.tar.gz
-            release/final/clash_for_merlin_clash-linux-armv7.tar.gz
-            release/final/clash_for_merlin_clash-linux-armv8.tar.gz
-            release/final/install.sh
-            release/final/uninstall.sh
+          files: release/final/*
           draft: false
           generate_release_notes: true
         env:

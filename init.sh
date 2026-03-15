@@ -65,6 +65,12 @@ if [ ! -d "${APP_HOME}/log" ]; then
     mkdir -p "${APP_HOME}/log"
 fi
 
+# 创建 bin 目录软链接
+if [ ! -d "${APP_HOME}/bin" ]; then
+    mkdir -p "${APP_HOME}/bin"
+    ln -sf /tmp/clash "${APP_HOME}/bin/clash"
+fi
+
 
 # 生产配置文件
 
@@ -125,17 +131,17 @@ if ! grep -q "{url: \"$am_webui_page\", tabName: \"Clash\"}" "${APP_HOME}/menuTr
 fi
 
 # 使用 bind mount 挂载修改后的 menuTree.js
-MENUTREE_SRC="${APP_HOME}/menuTree.js"
-MENUTREE_DST="/www/require/modules/menuTree.js"
+# MENUTREE_SRC="${APP_HOME}/menuTree.js"
+# MENUTREE_DST="/www/require/modules/menuTree.js"
 
-# 如果已经挂载，先卸载
-if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
-    umount "$MENUTREE_DST" 2>/dev/null
-fi
+# # 如果已经挂载，先卸载
+# if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
+#     umount "$MENUTREE_DST" 2>/dev/null
+# fi
 
-# 挂载
-mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
-echo "已挂载 menuTree.js"
+# # 挂载
+# mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
+# echo "已挂载 menuTree.js"
 
 # 配置 service-start 脚本实现开机自动恢复
 SERVICE_START="/jffs/scripts/services-start"
@@ -194,8 +200,11 @@ else
     echo "#!/bin/sh" > "$SERVICE_EVENT"
     echo "$SERVICE_LINE" >> "$SERVICE_EVENT"
     chmod +x "$SERVICE_EVENT"
-    logger -t "${APP_NAME}" "已创建 service-event 脚本"
+    echo "已创建 service-event 脚本"
 fi
+
+# 执行 service-start.sh 完成初始化（解压和挂载）
+sh "${START_SCRIPT}"
 
 logger -t "${APP_NAME}" "安装完成"
 echo "done"

@@ -3,14 +3,64 @@ APP_NAME="clash_for_merlin"
 APP_HOME="/jffs/addons/${APP_NAME}"
 MENUTREE_SRC="${APP_HOME}/menuTree.js"
 MENUTREE_DST="/www/require/modules/menuTree.js"
+CLASH_TMP="/tmp/clash"
 
-# 如果已挂载则先卸载
+# 挂载 menuTree.js
 if mountpoint -q "$MENUTREE_DST" 2>/dev/null; then
     umount "$MENUTREE_DST" 2>/dev/null
 fi
 
-# 挂载 menuTree.js
 if [ -f "$MENUTREE_SRC" ]; then
     mount -o bind "$MENUTREE_SRC" "$MENUTREE_DST"
     logger -t "$APP_NAME" "已挂载 menuTree.js"
+fi
+
+# 检测 /tmp/clash 是否存在，不存在则解压
+if [ ! -f "$CLASH_TMP" ] && [ -d "${APP_HOME}/binaries" ]; then
+    mkdir -p /tmp
+    for gz_file in "${APP_HOME}"/binaries/*.gz; do
+        if [ -f "$gz_file" ]; then
+            ARCH=$(uname -m)
+            case "$ARCH" in
+                armv5*)
+                    if echo "$gz_file" | grep -q "armv5"; then
+                        gzip -dc "$gz_file" > "$CLASH_TMP"
+                        chmod +x "$CLASH_TMP"
+                        logger -t "$APP_NAME" "已解压: $(basename $gz_file)"
+                        break
+                    fi
+                    ;;
+                armv6*)
+                    if echo "$gz_file" | grep -q "armv6"; then
+                        gzip -dc "$gz_file" > "$CLASH_TMP"
+                        chmod +x "$CLASH_TMP"
+                        logger -t "$APP_NAME" "已解压: $(basename $gz_file)"
+                        break
+                    fi
+                    ;;
+                armv7*)
+                    if echo "$gz_file" | grep -q "armv7"; then
+                        gzip -dc "$gz_file" > "$CLASH_TMP"
+                        chmod +x "$CLASH_TMP"
+                        logger -t "$APP_NAME" "已解压: $(basename $gz_file)"
+                        break
+                    fi
+                    ;;
+                aarch64)
+                    if echo "$gz_file" | grep -qE "arm64|armv8"; then
+                        gzip -dc "$gz_file" > "$CLASH_TMP"
+                        chmod +x "$CLASH_TMP"
+                        logger -t "$APP_NAME" "已解压: $(basename $gz_file)"
+                        break
+                    fi
+                    ;;
+            esac
+        fi
+    done
+fi
+
+# 创建 bin 目录软链接
+if [ -f "$CLASH_TMP" ] && [ ! -L "${APP_HOME}/bin/clash" ]; then
+    mkdir -p "${APP_HOME}/bin"
+    ln -sf "$CLASH_TMP" "${APP_HOME}/bin/clash"
 fi

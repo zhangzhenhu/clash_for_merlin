@@ -49,9 +49,10 @@ if [ -f /jffs/scripts/service-start ]; then
     sed -i "\|${APP_HOME}/service-start.sh|d" /jffs/scripts/service-start
 fi
 
-# Remove application files
-rm -rf "${APP_HOME}"
+# 不删除目录
+# rm -rf "${APP_HOME}"
 
 logger -t "${APP_NAME}" "Uninstalled successfully"
+echo "Uninstalled successfully"
 
 echo "done"
