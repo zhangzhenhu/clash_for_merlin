@@ -48,6 +48,8 @@
         var custom_settings = <% get_custom_settings(); %>;
         var clash_settings = {};
         var clash_service_status = "stopped";
+        var clash_proxies = {};
+        var proxyHealthStatus = {};
         const fields = [
             { id: 'clash_external_controller', default: '', key: 'clash_external_controller', source: "custom", "type": "string"},
             // { id: 'clash_version', default: '', key: 'clash_version', source: "custom", "type": "string"},
@@ -93,23 +95,139 @@
         }
         // 从 http://192.168.50.1:9090/version 读取版本配置
         function fetchClashVersion() {
-        document.getElementById('clash_version').innerText=custom_settings.clash_version;
-            // let port = custom_settings.clash_external_controller.split(':')[1];
-            // let token = custom_settings.clash_secret;
-            // fetch(`http://${window.location.hostname}:${port}/version`, {
-            //     headers: new Headers({
-            //         'Authorization': `Bearer ${token}`
-            //     })
-            // })
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         console.log('Clash version:', data);
-            //         document.getElementById('clash_version').value = data.version;
-            //     })
-            //     .catch(error => {
-            //         console.log('Clash version 读取失败:'+ error.message);
-            //         // alert('Clash 服务检测异常，可能没启动: ' + error.message);
-            //     });
+            document.getElementById('clash_version').innerText=custom_settings.clash_version;
+        }
+
+        // Fetch proxies list
+        function fetchProxies() {
+            let port = custom_settings.clash_external_controller.split(':')[1];
+            let token = custom_settings.clash_secret;
+
+            fetch(`http://${window.location.hostname}:${port}/proxies`, {
+                headers: new Headers({
+                    'Authorization': `Bearer ${token}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                clash_proxies = data;
+
+                // Filter: only show actual proxy types (Shadowsocks, VMess, Trojan, HTTP, Socks5)
+                // Exclude: system types + groups (Selector, URLTest, Fallback, LoadBalance, Relay)
+                let allProxies = data.proxies || {};
+                let proxyNodes = {};
+                let excludeTypes = [
+                    'Compatible', 'Direct', 'Pass', 'Reject', 'RejectDrop', 'RejectSimple',
+                    'Selector', 'URLTest', 'Fallback', 'LoadBalance', 'Relay', 'FallbackSingle', 'Static'
+                ];
+
+                for (let name in allProxies) {
+                    let proxy = allProxies[name];
+                    // Include if not in exclude list
+                    if (excludeTypes.indexOf(proxy.type) === -1) {
+                        proxyNodes[name] = proxy;
+                    }
+                }
+
+                clash_proxies.proxyNodes = proxyNodes;
+                renderProxyList();
+
+                // Auto test all proxies
+                setTimeout(testAllProxies, 500);
+            })
+            .catch(error => {
+                console.error('Error fetching proxies:', error);
+            });
+        }
+
+        // Render proxy list with status
+        function renderProxyList() {
+            let container = document.getElementById('proxy_list_container');
+            if (!container) return;
+
+            let proxyNodes = clash_proxies.proxyNodes || {};
+
+            if (Object.keys(proxyNodes).length === 0) {
+                container.innerHTML = '<p>未找到代理节点</p>';
+                return;
+            }
+
+            let html = '<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">';
+            html += '<thead><tr><th>名称</th><th>类型</th><th>状态</th><th>延迟</th><th>操作</th></tr></thead><tbody>';
+
+            for (let name in proxyNodes) {
+                let proxy = proxyNodes[name];
+                let status = proxyHealthStatus[name] || { status: 'unknown', delay: null };
+                let statusHtml = '';
+                let rowStyle = '';
+                if (status.status === 'ok') {
+                    statusHtml = '<span style="font-size:16px;">✅ 可用</span>';
+                    rowStyle = 'background:#e8f5e9;';
+                } else if (status.status === 'error') {
+                    statusHtml = '<span style="font-size:16px;">❌ 失败</span>';
+                    rowStyle = 'background:#ffebee;';
+                } else if (status.status === 'testing') {
+                    statusHtml = '<span style="font-size:16px;">🔄 测试中...</span>';
+                    rowStyle = 'background:#fff3e0;';
+                } else {
+                    statusHtml = '<span style="font-size:16px;">⏳ 待测试</span>';
+                }
+                let delayText = status.delay ? status.delay + 'ms' : '-';
+
+                html += '<tr style="' + rowStyle + '" id="row_' + name + '">';
+                html += '<td><strong>' + name + '</strong></td>';
+                html += '<td>' + proxy.type + '</td>';
+                html += '<td id="status_' + name + '">' + statusHtml + '</td>';
+                html += '<td id="delay_' + name + '">' + delayText + '</td>';
+                html += '<td><button type="button" class="button_gen" onclick="testProxy(\'' + name + '\')">🔄 测速</button></td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Test single proxy latency
+        function testProxy(name) {
+            let port = custom_settings.clash_external_controller.split(':')[1];
+            let token = custom_settings.clash_secret;
+            let url = `http://${window.location.hostname}:${port}/proxies/${encodeURIComponent(name)}/delay?timeout=5000&url=http://www.gstatic.com/generate_204`;
+
+            proxyHealthStatus[name] = { status: 'testing', delay: null };
+            document.getElementById('status_' + name).innerHTML = '<span style="font-size:16px;">🔄 测试中...</span>';
+            document.getElementById('delay_' + name).textContent = '-';
+            document.getElementById('row_' + name).style.background = '#fff3e0';
+
+            fetch(url, {
+                headers: new Headers({
+                    'Authorization': `Bearer ${token}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.delay) {
+                    proxyHealthStatus[name] = { status: 'ok', delay: data.delay };
+                    document.getElementById('status_' + name).innerHTML = '<span style="font-size:16px;">✅ 可用</span>';
+                    document.getElementById('delay_' + name).textContent = data.delay + 'ms';
+                    document.getElementById('row_' + name).style.background = '#e8f5e9';
+                } else {
+                    throw new Error('No delay data');
+                }
+            })
+            .catch(error => {
+                proxyHealthStatus[name] = { status: 'error', delay: null };
+                document.getElementById('status_' + name).innerHTML = '<span style="font-size:16px;">❌ 失败</span>';
+                document.getElementById('delay_' + name).textContent = '-';
+                document.getElementById('row_' + name).style.background = '#ffebee';
+                console.error('Delay test failed:', error);
+            });
+        }
+
+        // Test all proxies
+        function testAllProxies() {
+            let proxyNodes = clash_proxies.proxyNodes || {};
+            for (let name in proxyNodes) {
+                testProxy(name);
+            }
         }
 
 
@@ -286,6 +404,7 @@
             set_json_editor("clash_rules", clash_settings['rules']);
             set_json_editor("clash_dns", clash_settings['dns']);
             updateProxyCommands();
+            fetchProxies();
         }
 
         function SetCurrentPage() {
@@ -360,32 +479,54 @@
 
         // Update terminal proxy commands display
         function updateProxyCommands() {
-            var controller = custom_settings.clash_external_controller || "127.0.0.1:9090";
+            if (!custom_settings.clash_external_controller) return;
+
+            var controller = custom_settings.clash_external_controller;
             var parts = controller.split(':');
-            var host = parts[0] === "0.0.0.0" ? "127.0.0.1" : parts[0];
             var port = parts[1] || "9090";
-            
+
             var lanIp = window.location.hostname;
-            var httpPort = document.getElementById('clash_port').value || port;
-            var socksPort = document.getElementById('clash_socks_port').value || "7891";
-            
+            var httpPortEl = document.getElementById('clash_port');
+            var socksPortEl = document.getElementById('clash_socks_port');
+            var httpPort = httpPortEl ? httpPortEl.value : port;
+            var socksPort = socksPortEl ? socksPortEl.value : "7891";
+
             var cmd = "export https_proxy=http://" + lanIp + ":" + httpPort + " http_proxy=http://" + lanIp + ":" + httpPort + " all_proxy=socks5://" + lanIp + ":" + socksPort;
-            
-            document.getElementById('proxy_command').textContent = cmd;
-            
-            // Update Web UI link
-            var webUiUrl = "http://" + lanIp + ":" + port + "/ui/";
-            document.getElementById('webui_link').href = webUiUrl;
+
+            var proxyCmdEl = document.getElementById('proxy_command');
+            if (proxyCmdEl) {
+                proxyCmdEl.textContent = cmd;
+            }
         }
 
         // Copy proxy command to clipboard
         function copyProxyCommand() {
             var cmd = document.getElementById('proxy_command').textContent;
-            navigator.clipboard.writeText(cmd).then(function() {
-                alert('已复制到剪贴板');
-            }, function(err) {
-                console.error('复制失败: ', err);
-            });
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(cmd).then(function() {
+                    alert('已复制到剪贴板');
+                }, function(err) {
+                    console.error('复制失败: ', err);
+                });
+            } else {
+                // Fallback for non-HTTPS
+                var textArea = document.createElement("textarea");
+                textArea.value = cmd;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('已复制到剪贴板');
+                } catch (err) {
+                    console.error('复制失败: ', err);
+                    alert('复制失败，请手动复制');
+                }
+                document.body.removeChild(textArea);
+            }
         }
 
         // Open Web UI in new tab
@@ -458,6 +599,8 @@
                                             <div class="tabs">
                                                 <button type="button" class="tablinks tabClicked"
                                                     onclick="openTab(event, 'BasicInfo')">Basic Info</button>
+                                                <button type="button" class="tablinks tabClicked"
+                                                    onclick="openTab(event, 'ProxyStatus')">代理节点</button>
                                                 <button type="button" class="tablinks tabClicked"
                                                     onclick="openTab(event, 'ProxyConfig')">Proxy Configuration</button>
                                                 <button type="button" class="tablinks tabClicked"
@@ -637,6 +780,27 @@
                                                     </tr>
 
                                                 </table>
+                                            </div>
+
+                                            <!-- Proxy Status Tab -->
+                                            <div id="ProxyStatus" class="tabcontent">
+                                                <div>&nbsp;</div>
+                                                <div class="formfonttitle">
+                                                    代理节点状态
+                                                </div>
+                                                <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
+                                                <div class="formfontdesc">
+                                                    查看代理节点连接状态和延迟测速
+                                                </div>
+
+                                                <div style="margin: 10px 0;">
+                                                    <button type="button" class="button_gen" onclick="testAllProxies();">测速全部节点</button>
+                                                    <button type="button" class="button_gen" onclick="fetchProxies();">刷新列表</button>
+                                                </div>
+
+                                                <div id="proxy_list_container">
+                                                    <p>点击"刷新列表"加载代理节点</p>
+                                                </div>
                                             </div>
 
 
